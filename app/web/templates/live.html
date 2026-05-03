@@ -3,35 +3,35 @@
 {% block content %}
 <section class="section-header">
   <div>
-    <h1>Live-Grafik</h1>
-    <p>WebSocket-Aktualisierung für Messwerte, Sollwerte und Regelabweichung.</p>
+    <h1>{{ t("live_title") }}</h1>
+    <p>{{ t("live_subtitle") }}</p>
   </div>
   <span class="pill" data-field="status.mqtt_connected" data-boolean="true">-</span>
 </section>
 
 <section id="liveCharts" class="chart-grid">
   <article class="chart-panel">
-    <h2>Netzleistung</h2>
+    <h2>{{ t("grid_power") }}</h2>
     <canvas id="gridChart"></canvas>
   </article>
   <article class="chart-panel">
-    <h2>Ausgangsleistung</h2>
+    <h2>{{ t("output_power") }}</h2>
     <canvas id="outputChart"></canvas>
   </article>
   <article class="chart-panel">
-    <h2>PV-Leistung</h2>
+    <h2>{{ t("pv_power") }}</h2>
     <canvas id="pvChart"></canvas>
   </article>
   <article class="chart-panel">
-    <h2>Batterie-SOC</h2>
+    <h2>{{ t("battery_soc") }}</h2>
     <canvas id="socChart"></canvas>
   </article>
   <article class="chart-panel">
-    <h2>Sollwert vs. Istwert</h2>
+    <h2>{{ t("target_vs_actual") }}</h2>
     <canvas id="targetChart"></canvas>
   </article>
   <article class="chart-panel">
-    <h2>Regelabweichung</h2>
+    <h2>{{ t("control_deviation") }}</h2>
     <canvas id="deviationChart"></canvas>
   </article>
 </section>
@@ -39,6 +39,8 @@
 
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>
+    window.GLG_I18N = {{ i18n | tojson }};
+  </script>
   <script src="/static/app.js"></script>
 {% endblock %}
-

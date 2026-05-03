@@ -49,6 +49,7 @@ class AppConfig:
 
         control = ControlSettings.from_mapping(
             {
+                "ui_language": source.get("UI_LANGUAGE", defaults.ui_language),
                 "zero_export_enabled": source.get("ZERO_EXPORT_ENABLED", defaults.zero_export_enabled),
                 "target_grid_power_w": source.get("TARGET_GRID_POWER_W", defaults.target_grid_power_w),
                 "grid_power_band_min_w": source.get("GRID_POWER_BAND_MIN_W", defaults.grid_power_band_min_w),

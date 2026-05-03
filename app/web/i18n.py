@@ -1,0 +1,196 @@
+from __future__ import annotations
+
+from typing import Any
+
+
+SUPPORTED_LANGUAGES = {
+    "de": "Deutsch",
+    "en": "English",
+}
+
+
+TRANSLATIONS: dict[str, dict[str, str]] = {
+    "de": {
+        "nav_dashboard": "Dashboard",
+        "nav_live": "Live",
+        "nav_settings": "Einstellungen",
+        "nav_logs": "Logs",
+        "dashboard_title": "Dashboard",
+        "dashboard_subtitle": "Lokale Mock-Messwerte und aktueller Zero-Export-Status.",
+        "pv_power": "PV-Leistung",
+        "output_power": "Ausgangsleistung",
+        "grid_power": "Netzleistung",
+        "battery_soc": "Batterie-SOC",
+        "charge_discharge_power": "Lade-/Entladeleistung",
+        "control_mode": "Regelmodus",
+        "zero_export": "Zero Export",
+        "last_command": "Letzter Stellbefehl",
+        "last_error": "Letzter Fehler",
+        "device_status": "Geraetestatus",
+        "last_measurement": "Letzter Messwert",
+        "live_title": "Live-Grafik",
+        "live_subtitle": "WebSocket-Aktualisierung fuer Messwerte, Sollwerte und Regelabweichung.",
+        "target_vs_actual": "Sollwert vs. Istwert",
+        "control_deviation": "Regelabweichung",
+        "settings_title": "Einstellungen",
+        "settings_subtitle": "Aenderungen werden in SQLite gespeichert und im laufenden Dienst uebernommen.",
+        "language": "Sprache",
+        "target_grid_power": "Ziel-Netzbezug W",
+        "deadband_min": "Totband min W",
+        "deadband_max": "Totband max W",
+        "control_interval": "Regelintervall s",
+        "min_output_change": "Mindestaenderung W",
+        "output_step": "Schrittweite W",
+        "max_output_power": "Max. Ausgangsleistung W",
+        "min_output_power": "Min. Ausgangsleistung W",
+        "min_soc": "Mindest-SOC %",
+        "stale_measurement": "Messwertalter s",
+        "save": "Speichern",
+        "logs_title": "Logs",
+        "logs_subtitle": "Letzte 200 lokale Logeintraege aus SQLite.",
+        "time": "Zeit",
+        "level": "Level",
+        "source": "Quelle",
+        "message": "Meldung",
+        "no_logs": "Noch keine Logeintraege vorhanden.",
+        "active": "aktiv",
+        "inactive": "inaktiv",
+        "actual": "Istwert",
+        "target": "Sollwert",
+        "deviation": "Abweichung",
+        "offline": "offline",
+    },
+    "en": {
+        "nav_dashboard": "Dashboard",
+        "nav_live": "Live",
+        "nav_settings": "Settings",
+        "nav_logs": "Logs",
+        "dashboard_title": "Dashboard",
+        "dashboard_subtitle": "Local mock measurements and current zero-export status.",
+        "pv_power": "PV power",
+        "output_power": "Output power",
+        "grid_power": "Grid power",
+        "battery_soc": "Battery SOC",
+        "charge_discharge_power": "Charge/discharge power",
+        "control_mode": "Control mode",
+        "zero_export": "Zero Export",
+        "last_command": "Last command",
+        "last_error": "Last error",
+        "device_status": "Device status",
+        "last_measurement": "Last measurement",
+        "live_title": "Live charts",
+        "live_subtitle": "WebSocket updates for measurements, targets, and control deviation.",
+        "target_vs_actual": "Target vs. actual",
+        "control_deviation": "Control deviation",
+        "settings_title": "Settings",
+        "settings_subtitle": "Changes are stored in SQLite and applied while the service is running.",
+        "language": "Language",
+        "target_grid_power": "Target grid import W",
+        "deadband_min": "Deadband min W",
+        "deadband_max": "Deadband max W",
+        "control_interval": "Control interval s",
+        "min_output_change": "Minimum output change W",
+        "output_step": "Step size W",
+        "max_output_power": "Max. output power W",
+        "min_output_power": "Min. output power W",
+        "min_soc": "Minimum SOC %",
+        "stale_measurement": "Stale measurement limit s",
+        "save": "Save",
+        "logs_title": "Logs",
+        "logs_subtitle": "Last 200 local log entries from SQLite.",
+        "time": "Time",
+        "level": "Level",
+        "source": "Source",
+        "message": "Message",
+        "no_logs": "No log entries yet.",
+        "active": "active",
+        "inactive": "inactive",
+        "actual": "Actual",
+        "target": "Target",
+        "deviation": "Deviation",
+        "offline": "offline",
+    },
+}
+
+
+VALUE_TRANSLATIONS: dict[str, dict[str, dict[str, str]]] = {
+    "de": {
+        "reasons": {
+            "within_deadband": "innerhalb Totband",
+            "reduce_export": "Einspeisung reduzieren",
+            "increase_due_to_import": "wegen Netzbezug erhoehen",
+            "soc_below_minimum": "SOC unter Minimum",
+            "stale_measurement": "Messwert veraltet",
+            "zero_export_disabled": "Zero Export deaktiviert",
+            "invalid_measurement": "ungueltiger Messwert",
+            "missing_measurement": "Messwert fehlt",
+            "device_error_status": "Geraet im Fehlerstatus",
+            "unknown_device_status": "Geraetestatus unbekannt",
+        },
+        "statuses": {
+            "online": "online",
+            "offline": "offline",
+            "unknown": "unbekannt",
+            "error": "Fehler",
+        },
+        "modes": {
+            "zero_export": "Zero Export",
+            "manual": "Manuell",
+        },
+    },
+    "en": {
+        "reasons": {
+            "within_deadband": "within deadband",
+            "reduce_export": "reduce export",
+            "increase_due_to_import": "increase due to import",
+            "soc_below_minimum": "SOC below minimum",
+            "stale_measurement": "stale measurement",
+            "zero_export_disabled": "zero export disabled",
+            "invalid_measurement": "invalid measurement",
+            "missing_measurement": "missing measurement",
+            "device_error_status": "device error status",
+            "unknown_device_status": "unknown device status",
+        },
+        "statuses": {
+            "online": "online",
+            "offline": "offline",
+            "unknown": "unknown",
+            "error": "error",
+        },
+        "modes": {
+            "zero_export": "Zero Export",
+            "manual": "Manual",
+        },
+    },
+}
+
+
+def normalize_language(language: str | None) -> str:
+    normalized = (language or "de").strip().lower()
+    return normalized if normalized in SUPPORTED_LANGUAGES else "de"
+
+
+def translate(key: str, language: str | None) -> str:
+    normalized = normalize_language(language)
+    return TRANSLATIONS[normalized].get(key, TRANSLATIONS["de"].get(key, key))
+
+
+def browser_translations(language: str | None) -> dict[str, Any]:
+    normalized = normalize_language(language)
+    labels = TRANSLATIONS[normalized]
+    values = VALUE_TRANSLATIONS[normalized]
+    return {
+        "labels": {
+            "active": labels["active"],
+            "inactive": labels["inactive"],
+            "actual": labels["actual"],
+            "target": labels["target"],
+            "offline": labels["offline"],
+            "pvPower": labels["pv_power"],
+            "outputPower": labels["output_power"],
+            "gridPower": labels["grid_power"],
+            "batterySoc": labels["battery_soc"],
+            "deviation": labels["deviation"],
+        },
+        "values": values,
+    }

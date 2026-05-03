@@ -3,57 +3,56 @@
 {% block content %}
 <section class="section-header">
   <div>
-    <h1>Dashboard</h1>
-    <p>Lokale Mock-Messwerte und aktueller Zero-Export-Status.</p>
+    <h1>{{ t("dashboard_title") }}</h1>
+    <p>{{ t("dashboard_subtitle") }}</p>
   </div>
-  <span class="pill" data-field="device_status">unknown</span>
+  <span class="pill" data-field="device_status" data-value-map="statuses">unknown</span>
 </section>
 
 <section class="metric-grid">
   <article class="metric-card">
-    <span>PV-Leistung</span>
+    <span>{{ t("pv_power") }}</span>
     <strong data-field="measurements.pv_power_w" data-unit=" W">-</strong>
   </article>
   <article class="metric-card">
-    <span>Ausgangsleistung</span>
+    <span>{{ t("output_power") }}</span>
     <strong data-field="measurements.output_power_w" data-unit=" W">-</strong>
   </article>
   <article class="metric-card">
-    <span>Netzleistung</span>
+    <span>{{ t("grid_power") }}</span>
     <strong data-field="measurements.grid_power_w" data-unit=" W">-</strong>
   </article>
   <article class="metric-card">
-    <span>Batterie-SOC</span>
+    <span>{{ t("battery_soc") }}</span>
     <strong data-field="measurements.battery_soc" data-unit=" %">-</strong>
   </article>
   <article class="metric-card">
-    <span>Lade-/Entladeleistung</span>
+    <span>{{ t("charge_discharge_power") }}</span>
     <strong data-field="measurements.charge_discharge_power_w" data-unit=" W">-</strong>
   </article>
   <article class="metric-card">
-    <span>Regelmodus</span>
-    <strong data-field="control.control_mode">-</strong>
+    <span>{{ t("control_mode") }}</span>
+    <strong data-field="control.control_mode" data-value-map="modes">-</strong>
   </article>
   <article class="metric-card">
-    <span>Zero Export</span>
+    <span>{{ t("zero_export") }}</span>
     <strong data-field="settings.zero_export_enabled" data-boolean="true">-</strong>
   </article>
   <article class="metric-card">
-    <span>Letzter Stellbefehl</span>
-    <strong data-field="control.reason">-</strong>
+    <span>{{ t("last_command") }}</span>
+    <strong data-field="control.reason" data-value-map="reasons">-</strong>
   </article>
   <article class="metric-card">
-    <span>Letzter Fehler</span>
-    <strong data-field="error_status">-</strong>
+    <span>{{ t("last_error") }}</span>
+    <strong data-field="error_status" data-value-map="reasons">-</strong>
   </article>
   <article class="metric-card">
-    <span>Gerätestatus</span>
-    <strong data-field="device_status">-</strong>
+    <span>{{ t("device_status") }}</span>
+    <strong data-field="device_status" data-value-map="statuses">-</strong>
   </article>
   <article class="metric-card wide">
-    <span>Letzter Messwert</span>
+    <span>{{ t("last_measurement") }}</span>
     <strong data-field="measurements.timestamp" data-date="true">-</strong>
   </article>
 </section>
 {% endblock %}
-

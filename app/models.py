@@ -73,6 +73,7 @@ class Measurement:
 
 @dataclass(frozen=True, slots=True)
 class ControlSettings:
+    ui_language: str = "de"
     zero_export_enabled: bool = True
     target_grid_power_w: int = 30
     grid_power_band_min_w: int = 20
@@ -100,7 +101,9 @@ class ControlSettings:
             if field.name not in values:
                 continue
             raw_value = values[field.name]
-            if field.name in bool_fields:
+            if field.name == "ui_language":
+                current[field.name] = str(raw_value).strip().lower()
+            elif field.name in bool_fields:
                 current[field.name] = parse_bool(raw_value)
             else:
                 current[field.name] = parse_int(raw_value, field.name)
@@ -109,6 +112,8 @@ class ControlSettings:
         return settings
 
     def validate(self) -> None:
+        if self.ui_language not in {"de", "en"}:
+            raise ValueError("ui_language must be 'de' or 'en'")
         if self.control_interval_seconds <= 0:
             raise ValueError("control_interval_seconds must be greater than 0")
         if self.stale_measurement_seconds <= 0:

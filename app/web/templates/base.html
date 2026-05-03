@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ language }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,18 +10,20 @@
     <header class="topbar">
       <a class="brand" href="/">Growatt Local Gateway</a>
       <nav class="nav">
-        <a href="/">Dashboard</a>
-        <a href="/live">Live</a>
-        <a href="/settings">Einstellungen</a>
-        <a href="/logs">Logs</a>
+        <a href="/">{{ t("nav_dashboard") }}</a>
+        <a href="/live">{{ t("nav_live") }}</a>
+        <a href="/settings">{{ t("nav_settings") }}</a>
+        <a href="/logs">{{ t("nav_logs") }}</a>
       </nav>
     </header>
     <main class="page">
       {% block content %}{% endblock %}
     </main>
     {% block scripts %}
+      <script>
+        window.GLG_I18N = {{ i18n | tojson }};
+      </script>
       <script src="/static/app.js"></script>
     {% endblock %}
   </body>
 </html>
-

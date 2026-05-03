@@ -23,7 +23,7 @@ cp .env.example .env
 nano .env
 ```
 
-Trage dort MQTT-Broker, Ports und Regelparameter ein. Es gehören keine echten Zugangsdaten in das Repository.
+Trage dort MQTT-Broker, Ports, Sprache (`UI_LANGUAGE=de` oder `UI_LANGUAGE=en`) und Regelparameter ein. Es gehören keine echten Zugangsdaten in das Repository.
 
 ## Dienst starten
 

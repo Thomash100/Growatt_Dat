@@ -3,8 +3,8 @@
 {% block content %}
 <section class="section-header">
   <div>
-    <h1>Logs</h1>
-    <p>Letzte 200 lokale Logeinträge aus SQLite.</p>
+    <h1>{{ t("logs_title") }}</h1>
+    <p>{{ t("logs_subtitle") }}</p>
   </div>
 </section>
 
@@ -12,10 +12,10 @@
   <table>
     <thead>
       <tr>
-        <th>Zeit</th>
-        <th>Level</th>
-        <th>Quelle</th>
-        <th>Meldung</th>
+        <th>{{ t("time") }}</th>
+        <th>{{ t("level") }}</th>
+        <th>{{ t("source") }}</th>
+        <th>{{ t("message") }}</th>
       </tr>
     </thead>
     <tbody>
@@ -28,11 +28,10 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="4">Noch keine Logeinträge vorhanden.</td>
+        <td colspan="4">{{ t("no_logs") }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </section>
 {% endblock %}
-

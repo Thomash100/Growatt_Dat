@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
 from app.models import ControlSettings
+from app.web.i18n import SUPPORTED_LANGUAGES, browser_translations, normalize_language, translate
 
 
 router = APIRouter()
@@ -16,14 +17,36 @@ def _service(request: Request):
     return request.app.state.service
 
 
+def _template_context(request: Request, **extra):
+    service = _service(request)
+    language = normalize_language(service.settings.ui_language)
+    context = {
+        "settings": service.settings.to_dict(),
+        "language": language,
+        "languages": SUPPORTED_LANGUAGES,
+        "i18n": browser_translations(language),
+        "t": lambda key: translate(key, language),
+    }
+    context.update(extra)
+    return context
+
+
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    return templates.TemplateResponse(request, "dashboard.html", {"state": _service(request).snapshot()})
+    return templates.TemplateResponse(
+        request,
+        "dashboard.html",
+        _template_context(request, state=_service(request).snapshot()),
+    )
 
 
 @router.get("/live", response_class=HTMLResponse)
 async def live(request: Request):
-    return templates.TemplateResponse(request, "live.html", {"state": _service(request).snapshot()})
+    return templates.TemplateResponse(
+        request,
+        "live.html",
+        _template_context(request, state=_service(request).snapshot()),
+    )
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -31,7 +54,7 @@ async def settings_page(request: Request):
     return templates.TemplateResponse(
         request,
         "settings.html",
-        {"settings": _service(request).settings.to_dict(), "error": None},
+        _template_context(request, error=None),
     )
 
 
@@ -47,10 +70,7 @@ async def update_settings_form(request: Request):
         return templates.TemplateResponse(
             request,
             "settings.html",
-            {
-                "settings": service.settings.to_dict(),
-                "error": str(exc),
-            },
+            _template_context(request, error=str(exc)),
             status_code=400,
         )
     await service.update_settings(settings)
@@ -60,7 +80,7 @@ async def update_settings_form(request: Request):
 @router.get("/logs", response_class=HTMLResponse)
 async def logs_page(request: Request):
     logs = _service(request).store.get_logs(limit=200)
-    return templates.TemplateResponse(request, "logs.html", {"logs": logs})
+    return templates.TemplateResponse(request, "logs.html", _template_context(request, logs=logs))
 
 
 @router.get("/api/status")

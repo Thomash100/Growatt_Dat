@@ -12,6 +12,7 @@ def test_config_loads_from_environment_mapping():
             "MQTT_DISCOVERY_PREFIX": "homeassistant",
             "DATABASE_PATH": "/tmp/gateway.sqlite",
             "WEB_PORT": "8090",
+            "UI_LANGUAGE": "en",
             "ZERO_EXPORT_ENABLED": "false",
             "TARGET_GRID_POWER_W": "40",
             "GRID_POWER_BAND_MIN_W": "25",
@@ -32,8 +33,17 @@ def test_config_loads_from_environment_mapping():
     assert config.mqtt_username == "example-user"
     assert config.mqtt_password == "example-password"
     assert config.web_port == 8090
+    assert config.control.ui_language == "en"
     assert config.control.zero_export_enabled is False
     assert config.control.target_grid_power_w == 40
     assert config.control.max_output_power_w == 700
     assert config.control.min_soc_percent == 20
 
+
+def test_config_rejects_invalid_ui_language():
+    try:
+        AppConfig.from_env({"UI_LANGUAGE": "fr"}, load_dotenv=False)
+    except ValueError as exc:
+        assert "ui_language" in str(exc)
+    else:
+        raise AssertionError("Expected invalid UI language to raise ValueError")

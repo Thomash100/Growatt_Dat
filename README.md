@@ -9,6 +9,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 ## Funktionsumfang Version 1
 
 - FastAPI-Webserver mit Dashboard, Live-Grafiken, Einstellungen und Logs.
+- Zweisprachige Weboberfläche mit Deutsch/Englisch-Auswahl.
 - WebSocket unter `/ws/live` für Live-Daten.
 - SQLite-Speicherung für Messwerte, Regelentscheidungen, Einstellungen und Logs.
 - Mock-Growatt-Gerät mit realistischen Schwankungen.
@@ -61,6 +62,7 @@ Wichtige Variablen:
 - `MQTT_DISCOVERY_PREFIX`
 - `DATABASE_PATH`
 - `WEB_PORT`
+- `UI_LANGUAGE` (`de` oder `en`)
 - `ZERO_EXPORT_ENABLED`
 - `TARGET_GRID_POWER_W`
 - `GRID_POWER_BAND_MIN_W`
@@ -98,6 +100,8 @@ docker compose down
 ```text
 http://raspberrypi.local:8080
 ```
+
+Die Sprache der Weboberfläche ist über `UI_LANGUAGE=de` oder `UI_LANGUAGE=en` vorkonfigurierbar und kann später unter `/settings` ohne Container-Neustart geändert werden.
 
 Lokale Endpunkte:
 

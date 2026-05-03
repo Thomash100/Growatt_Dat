@@ -187,7 +187,8 @@ label {
   font-weight: 650;
 }
 
-input {
+input,
+select {
   width: 100%;
   min-height: 42px;
   padding: 0 12px;
@@ -274,4 +275,3 @@ td {
     grid-template-columns: 1fr;
   }
 }
-

@@ -1,4 +1,5 @@
 const MAX_POINTS = 120;
+const i18n = window.GLG_I18N || { labels: {}, values: {} };
 const socketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 const socket = new WebSocket(`${socketProtocol}//${window.location.host}/ws/live`);
 const charts = {};
@@ -12,7 +13,10 @@ function readPath(source, path) {
 
 function formatValue(value, element) {
   if (value === null || value === undefined || value === "") return "-";
-  if (element.dataset.boolean === "true") return value ? "aktiv" : "inaktiv";
+  if (element.dataset.valueMap && i18n.values[element.dataset.valueMap]) {
+    return i18n.values[element.dataset.valueMap][value] || value;
+  }
+  if (element.dataset.boolean === "true") return value ? i18n.labels.active || "active" : i18n.labels.inactive || "inactive";
   if (element.dataset.date === "true") return new Date(value).toLocaleString();
   return `${value}${element.dataset.unit || ""}`;
 }
@@ -63,7 +67,7 @@ function makeTargetChart() {
       labels: [],
       datasets: [
         {
-          label: "Istwert",
+          label: i18n.labels.actual || "Actual",
           data: [],
           borderColor: "#2563eb",
           backgroundColor: "#2563eb22",
@@ -72,7 +76,7 @@ function makeTargetChart() {
           borderWidth: 2
         },
         {
-          label: "Sollwert",
+          label: i18n.labels.target || "Target",
           data: [],
           borderColor: "#c2410c",
           backgroundColor: "#c2410c22",
@@ -96,12 +100,12 @@ function makeTargetChart() {
 
 function setupCharts() {
   if (!document.getElementById("liveCharts")) return;
-  charts.grid = makeChart("gridChart", "Netzleistung", "#0f766e");
-  charts.output = makeChart("outputChart", "Ausgangsleistung", "#2563eb");
-  charts.pv = makeChart("pvChart", "PV-Leistung", "#ca8a04");
-  charts.soc = makeChart("socChart", "Batterie-SOC", "#16a34a", "%");
+  charts.grid = makeChart("gridChart", i18n.labels.gridPower || "Grid power", "#0f766e");
+  charts.output = makeChart("outputChart", i18n.labels.outputPower || "Output power", "#2563eb");
+  charts.pv = makeChart("pvChart", i18n.labels.pvPower || "PV power", "#ca8a04");
+  charts.soc = makeChart("socChart", i18n.labels.batterySoc || "Battery SOC", "#16a34a", "%");
   charts.target = makeTargetChart();
-  charts.deviation = makeChart("deviationChart", "Abweichung", "#be123c");
+  charts.deviation = makeChart("deviationChart", i18n.labels.deviation || "Deviation", "#be123c");
 }
 
 function pushPoint(chart, label, values) {
@@ -138,9 +142,8 @@ socket.addEventListener("message", (event) => {
 
 socket.addEventListener("close", () => {
   document.querySelectorAll("[data-field='device_status']").forEach((element) => {
-    element.textContent = "offline";
+    element.textContent = i18n.labels.offline || "offline";
   });
 });
 
 setupCharts();
-
