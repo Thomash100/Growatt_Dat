@@ -19,6 +19,7 @@ from app.meters.factory import create_meter
 from app.models import ControlDecision, ControlSettings, Measurement, MeterReading, datetime_to_iso, utc_now
 from app.mqtt.publisher import MqttPublisher
 from app.storage.sqlite_store import SQLiteStore
+from app.version import VERSION, VERSION_LABEL
 from app.web.routes import router
 from app.web.websocket import register_websocket_routes
 
@@ -80,6 +81,7 @@ class GatewayService:
         status_payload = self._status_payload()
         return {
             "timestamp": datetime_to_iso(utc_now()),
+            "version": VERSION_LABEL,
             "measurements": None if self.latest_measurement is None else self.latest_measurement.to_dict(),
             "meter": None if self.latest_meter_reading is None else self.latest_meter_reading.to_dict(),
             "control": None if self.latest_decision is None else self.latest_decision.to_dict(),
@@ -149,6 +151,7 @@ class GatewayService:
         uptime_seconds = int((utc_now() - self.started_at).total_seconds())
         return {
             "timestamp": datetime_to_iso(utc_now()),
+            "version": VERSION_LABEL,
             "device_status": "unknown" if self.latest_measurement is None else self.latest_measurement.device_status,
             "meter_provider": self.settings.meter_provider,
             "meter_source": None if self.latest_meter_reading is None else self.latest_meter_reading.source,
@@ -210,7 +213,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Growatt Local Gateway",
     description="Local mock gateway for future Growatt NEO/NOAH integration",
-    version="0.1.0",
+    version=VERSION,
     lifespan=lifespan,
 )
 

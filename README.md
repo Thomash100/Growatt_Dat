@@ -4,6 +4,8 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
+Aktuelle Version: `V0.001.1`
+
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
 ## Funktionsumfang Version 1
