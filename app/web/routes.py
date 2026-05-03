@@ -88,9 +88,24 @@ async def logs_page(request: Request):
     return templates.TemplateResponse(request, "logs.html", _template_context(request, logs=logs))
 
 
+@router.get("/update", response_class=HTMLResponse)
+async def update_page(request: Request, force: bool = Query(default=False)):
+    update_status = await _service(request).check_updates(force=force)
+    return templates.TemplateResponse(
+        request,
+        "update.html",
+        _template_context(request, update_status=update_status),
+    )
+
+
 @router.get("/api/status")
 async def api_status(request: Request):
     return _service(request).snapshot()
+
+
+@router.get("/api/update/check")
+async def api_update_check(request: Request, force: bool = Query(default=False)):
+    return await _service(request).check_updates(force=force)
 
 
 @router.get("/api/settings")

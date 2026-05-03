@@ -1,6 +1,7 @@
-VERSION = "0.001.3"
+VERSION = "0.001.4"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
+PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
 PROJECT_WEBSITE = "https://github.com/Thomash100/Growatt_Dat"
 
 RELEASE_NOTES = {
@@ -11,26 +12,26 @@ RELEASE_NOTES = {
         "groups": [
             {
                 "title": "New Features",
-                "icon": "💫",
+                "icon": "*",
                 "changes": [
-                    "Versionsdialog im klaren Release-Layout mit Version, Release-Kanal und Website.",
-                    "Aenderungsliste ist nach Kategorien gruppiert.",
-                    "Versions-Badge bleibt in der Navigation sichtbar.",
+                    "Neue Update-Seite in der Weboberflaeche mit GitHub-Versionspruefung.",
+                    "API-Endpunkt /api/update/check meldet aktuelle und verfuegbare Version.",
+                    "Navigations-Badge zeigt an, wenn eine neuere GitHub-Version verfuegbar ist.",
                 ],
             },
             {
                 "title": "Other Changes",
-                "icon": "☀️",
+                "icon": "-",
                 "changes": [
-                    "Release-Hinweis wird pro Browser und Version nur einmal angezeigt.",
-                    "Release-Daten liegen zentral in app/version.py.",
+                    "README und Update-Dokumentation erklaeren Raspberry-Pi-Updates ueber GitHub.",
+                    "Update-Check ist per .env konfigurierbar und kann deaktiviert werden.",
                 ],
             },
             {
                 "title": "Bug Fixes",
-                "icon": "🐞",
+                "icon": "+",
                 "changes": [
-                    "Keine neuen Fehlerbehebungen in dieser Version.",
+                    "Release-Notizen verwenden robuste ASCII-Symbole fuer saubere Anzeige.",
                 ],
             },
         ],
@@ -42,26 +43,26 @@ RELEASE_NOTES = {
         "groups": [
             {
                 "title": "New Features",
-                "icon": "💫",
+                "icon": "*",
                 "changes": [
-                    "Version dialog now uses a clear release layout with version, release channel, and website.",
-                    "Changes are grouped by category.",
-                    "The version badge remains visible in the navigation.",
+                    "New web update page with GitHub version checks.",
+                    "API endpoint /api/update/check reports current and available versions.",
+                    "Navigation badge shows when a newer GitHub version is available.",
                 ],
             },
             {
                 "title": "Other Changes",
-                "icon": "☀️",
+                "icon": "-",
                 "changes": [
-                    "The release notice is shown only once per browser and version.",
-                    "Release data is centralized in app/version.py.",
+                    "README and update docs explain Raspberry Pi updates through GitHub.",
+                    "Update checks are configurable through .env and can be disabled.",
                 ],
             },
             {
                 "title": "Bug Fixes",
-                "icon": "🐞",
+                "icon": "+",
                 "changes": [
-                    "No new bug fixes in this version.",
+                    "Release notes now use robust ASCII symbols for clean rendering.",
                 ],
             },
         ],

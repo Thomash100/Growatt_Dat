@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.4 - 2026-05-03
+
+- Update-Seite `/update` mit GitHub-Versionspruefung ergaenzt.
+- API-Endpunkt `/api/update/check` fuer aktuelle und verfuegbare Versionen ergaenzt.
+- Navigationshinweis fuer verfuegbare Updates ergaenzt.
+- README und Update-Dokumentation fuer Raspberry-Pi-/GitHub-Updates erweitert.
+
 ## V0.001.3 - 2026-05-03
 
 - Release-Popup im klaren Versionslayout mit Version, Release-Kanal und Website umgesetzt.

@@ -71,6 +71,19 @@ body {
   color: var(--accent);
 }
 
+.update-indicator {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--danger);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
 .page {
   width: min(1280px, calc(100% - 32px));
   margin: 28px auto 48px;
@@ -236,6 +249,12 @@ select {
   background: var(--accent-dark);
 }
 
+.primary-button.as-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .alert {
   margin-bottom: 16px;
   padding: 12px 14px;
@@ -244,6 +263,22 @@ select {
   color: var(--danger);
   background: rgba(190, 18, 60, 0.08);
   font-weight: 700;
+}
+
+.notice {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  border-radius: 8px;
+  color: var(--accent-dark);
+  background: rgba(15, 118, 110, 0.08);
+  font-weight: 750;
+}
+
+.notice.important {
+  border-color: rgba(190, 18, 60, 0.28);
+  color: var(--danger);
+  background: rgba(190, 18, 60, 0.08);
 }
 
 .release-backdrop {
@@ -342,6 +377,74 @@ select {
   gap: 7px;
   margin: 0;
   padding-left: 20px;
+}
+
+.update-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.update-panel {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.update-panel.wide {
+  grid-column: 1 / -1;
+}
+
+.update-meta {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 0;
+}
+
+.update-meta div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.update-meta div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.update-meta dt {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.update-meta dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 850;
+}
+
+.command-block,
+.changelog-block {
+  overflow-x: auto;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101827;
+  color: #eef6ff;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.changelog-block {
+  white-space: pre-wrap;
 }
 
 .table-wrap {

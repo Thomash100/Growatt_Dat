@@ -19,6 +19,7 @@ from app.meters.factory import create_meter
 from app.models import ControlDecision, ControlSettings, Measurement, MeterReading, datetime_to_iso, utc_now
 from app.mqtt.publisher import MqttPublisher
 from app.storage.sqlite_store import SQLiteStore
+from app.update_checker import UpdateChecker
 from app.version import VERSION, VERSION_LABEL
 from app.web.routes import router
 from app.web.websocket import register_websocket_routes
@@ -37,6 +38,11 @@ class GatewayService:
         self.meter = create_meter(settings)
         self.controller = ZeroExportController()
         self.mqtt = MqttPublisher(config)
+        self.update_checker = UpdateChecker(
+            config.update_repository,
+            timeout_seconds=config.update_check_timeout_seconds,
+            enabled=config.update_check_enabled,
+        )
         self.latest_measurement: Measurement | None = None
         self.latest_meter_reading: MeterReading | None = None
         self.latest_decision: ControlDecision | None = None
@@ -44,6 +50,7 @@ class GatewayService:
         self.started_at = utc_now()
         self._task: asyncio.Task[None] | None = None
         self._settings_lock = asyncio.Lock()
+        self._update_cache: tuple[float, dict[str, Any]] | None = None
 
     async def start(self) -> None:
         self.mqtt.start()
@@ -76,6 +83,18 @@ class GatewayService:
             self.store.save_settings(settings)
             self.mqtt.publish_settings(settings)
             self.store.add_log("INFO", "system", "Settings updated")
+
+    async def check_updates(self, *, force: bool = False) -> dict[str, Any]:
+        if not force and self._update_cache is not None:
+            checked_at, cached = self._update_cache
+            if time.monotonic() - checked_at < 900:
+                return cached
+        result = await asyncio.to_thread(self.update_checker.check)
+        payload = result.to_dict()
+        self._update_cache = (time.monotonic(), payload)
+        if payload.get("update_available"):
+            self.store.add_log("INFO", "system", f"Update available: {payload.get('latest_version_label')}")
+        return payload
 
     def snapshot(self) -> dict[str, Any]:
         status_payload = self._status_payload()

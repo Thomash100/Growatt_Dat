@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from app.models import ControlSettings, parse_int
+from app.models import ControlSettings, parse_bool, parse_float, parse_int
+from app.version import PROJECT_REPOSITORY
 
 
 def load_dotenv_file(path: str | Path = ".env") -> None:
@@ -37,6 +38,9 @@ class AppConfig:
     shelly_3em_base_url: str | None = None
     shelly_3em_generation: str = "auto"
     shelly_3em_timeout_seconds: float = 3.0
+    update_check_enabled: bool = True
+    update_repository: str = PROJECT_REPOSITORY
+    update_check_timeout_seconds: float = 4.0
     control: ControlSettings = ControlSettings()
 
     @classmethod
@@ -97,6 +101,12 @@ class AppConfig:
             shelly_3em_base_url=control.shelly_3em_base_url,
             shelly_3em_generation=control.shelly_3em_generation,
             shelly_3em_timeout_seconds=control.shelly_3em_timeout_seconds,
+            update_check_enabled=parse_bool(source.get("UPDATE_CHECK_ENABLED", "true")),
+            update_repository=str(source.get("UPDATE_REPOSITORY", PROJECT_REPOSITORY)).strip(),
+            update_check_timeout_seconds=parse_float(
+                source.get("UPDATE_CHECK_TIMEOUT_SECONDS", 4.0),
+                "UPDATE_CHECK_TIMEOUT_SECONDS",
+            ),
             control=control,
         )
         config.validate()
@@ -119,6 +129,10 @@ class AppConfig:
             raise ValueError("SHELLY_3EM_GENERATION must be 'auto', 'gen1', or 'gen2'")
         if self.shelly_3em_timeout_seconds <= 0:
             raise ValueError("SHELLY_3EM_TIMEOUT_SECONDS must be greater than 0")
+        if not self.update_repository or "/" not in self.update_repository:
+            raise ValueError("UPDATE_REPOSITORY must use the 'owner/repository' format")
+        if self.update_check_timeout_seconds <= 0:
+            raise ValueError("UPDATE_CHECK_TIMEOUT_SECONDS must be greater than 0")
         if self.meter_provider == "shelly_3em" and not self.shelly_3em_base_url:
             raise ValueError("SHELLY_3EM_BASE_URL is required when METER_PROVIDER=shelly_3em")
         self.control.validate()

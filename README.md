@@ -4,7 +4,7 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
-Aktuelle Version: `V0.001.3`
+Aktuelle Version: `V0.001.4`
 
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
@@ -22,6 +22,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 - MQTT Auto Discovery unter `homeassistant/...`.
 - Dockerfile, `docker-compose.yml`, `.env.example`.
 - GitHub Actions Workflow für Tests.
+- Update-Seite unter `/update` mit GitHub-Versionspruefung.
 
 ## Voraussetzungen
 
@@ -71,6 +72,9 @@ Wichtige Variablen:
 - `SHELLY_3EM_BASE_URL` (z. B. `http://192.168.178.252`)
 - `SHELLY_3EM_GENERATION` (`auto`, `gen1` oder `gen2`)
 - `SHELLY_3EM_TIMEOUT_SECONDS`
+- `UPDATE_CHECK_ENABLED`
+- `UPDATE_REPOSITORY`
+- `UPDATE_CHECK_TIMEOUT_SECONDS`
 - `ZERO_EXPORT_ENABLED`
 - `TARGET_GRID_POWER_W`
 - `GRID_POWER_BAND_MIN_W`
@@ -117,7 +121,9 @@ Lokale Endpunkte:
 - `/live`
 - `/settings`
 - `/logs`
+- `/update`
 - `/api/status`
+- `/api/update/check`
 - `/api/settings`
 - `/api/meters`
 - `/api/meter/latest`
@@ -172,6 +178,10 @@ Discovery-Topics werden unter `homeassistant/...` veröffentlicht. Enthalten sin
 - letzter Fehler
 
 ## Update
+
+Die normale Raspberry-Pi-Aktualisierung ueber `apt update` und `apt upgrade` aktualisiert Systempakete. Dieses GitHub-Projekt wird damit erst automatisch aktualisiert, wenn spaeter ein eigenes Debian-Paket oder ein APT-Repository bereitgestellt wird.
+
+Die Weboberflaeche bietet unter `/update` eine Versionspruefung gegen GitHub. Die Installation erfolgt in dieser Version bewusst ueber die Konsole, weil die Weboberflaeche noch keine Anmeldung hat und ein Button fuer Host-Befehle im Heimnetz sicherheitskritisch waere.
 
 ```bash
 cd growatt-local-gateway

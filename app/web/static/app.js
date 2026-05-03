@@ -171,6 +171,24 @@ function setupReleaseNotice() {
   });
 }
 
+function setupUpdateIndicator() {
+  const indicator = document.getElementById("updateIndicator");
+  if (!indicator || !window.fetch) return;
+  fetch("/api/update/check")
+    .then((response) => {
+      if (!response.ok) throw new Error("update check failed");
+      return response.json();
+    })
+    .then((payload) => {
+      if (payload.update_available) {
+        indicator.hidden = false;
+      }
+    })
+    .catch(() => {
+      indicator.hidden = true;
+    });
+}
+
 socket.addEventListener("message", (event) => {
   const payload = JSON.parse(event.data);
   updateFields(payload);
@@ -185,3 +203,4 @@ socket.addEventListener("close", () => {
 
 setupCharts();
 setupReleaseNotice();
+setupUpdateIndicator();

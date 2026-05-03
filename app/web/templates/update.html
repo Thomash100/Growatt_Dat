@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>{{ t("update_title") }}</h1>
+    <p>{{ t("update_subtitle") }}</p>
+  </div>
+  <a class="primary-button as-link" href="/update?force=true">{{ t("check_update") }}</a>
+</section>
+
+<div class="update-grid">
+  <section class="update-panel">
+    <h2>{{ t("update_status") }}</h2>
+    <dl class="update-meta">
+      <div>
+        <dt>{{ t("version") }}</dt>
+        <dd>{{ update_status.current_version_label }}</dd>
+      </div>
+      <div>
+        <dt>{{ t("latest_version") }}</dt>
+        <dd>{{ update_status.latest_version_label or "-" }}</dd>
+      </div>
+      <div>
+        <dt>{{ t("release") }}</dt>
+        <dd>{{ release_channel }}</dd>
+      </div>
+    </dl>
+
+    {% if update_status.status == "disabled" %}
+    <div class="notice">{{ t("update_check_disabled") }}</div>
+    {% elif update_status.status == "error" %}
+    <div class="alert">{{ t("update_check_failed") }}: {{ update_status.error_status }}</div>
+    {% elif update_status.update_available %}
+    <div class="notice important">{{ t("update_available") }}</div>
+    {% else %}
+    <div class="notice">{{ t("update_current") }}</div>
+    {% endif %}
+
+    {% if update_status.release_url %}
+    <p><a href="{{ update_status.release_url }}" target="_blank" rel="noreferrer">{{ t("open_github_release") }}</a></p>
+    {% endif %}
+  </section>
+
+  <section class="update-panel">
+    <h2>{{ t("raspbian_update_title") }}</h2>
+    <p>{{ t("raspbian_update_text") }}</p>
+  </section>
+
+  <section class="update-panel">
+    <h2>{{ t("manual_update_title") }}</h2>
+    <p>{{ t("manual_update_text") }}</p>
+    <pre class="command-block"><code>cd growatt-local-gateway
+git pull
+docker compose up -d --build</code></pre>
+    <p>{{ t("manual_update_cleanup") }}</p>
+    <pre class="command-block"><code>docker image prune -f</code></pre>
+  </section>
+
+  <section class="update-panel">
+    <h2>{{ t("web_install_title") }}</h2>
+    <p>{{ t("web_install_text") }}</p>
+  </section>
+
+  {% if update_status.changelog %}
+  <section class="update-panel wide">
+    <h2>{{ t("remote_changelog") }}</h2>
+    <pre class="changelog-block">{{ update_status.changelog }}</pre>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
