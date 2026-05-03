@@ -15,7 +15,7 @@ def test_config_loads_from_environment_mapping():
             "UI_LANGUAGE": "en",
             "METER_PROVIDER": "shelly_3em",
             "METER_POWER_SIGN": "inverted",
-            "SHELLY_3EM_BASE_URL": "http://192.168.1.100",
+            "SHELLY_3EM_BASE_URL": "http://192.168.178.252",
             "SHELLY_3EM_GENERATION": "gen1",
             "SHELLY_3EM_TIMEOUT_SECONDS": "2.5",
             "ZERO_EXPORT_ENABLED": "false",
@@ -40,7 +40,7 @@ def test_config_loads_from_environment_mapping():
     assert config.web_port == 8090
     assert config.meter_provider == "shelly_3em"
     assert config.meter_power_sign == "inverted"
-    assert config.shelly_3em_base_url == "http://192.168.1.100"
+    assert config.shelly_3em_base_url == "http://192.168.178.252"
     assert config.shelly_3em_generation == "gen1"
     assert config.shelly_3em_timeout_seconds == 2.5
     assert config.control.ui_language == "en"
@@ -61,8 +61,11 @@ def test_config_rejects_invalid_ui_language():
 
 def test_config_requires_shelly_base_url_for_shelly_provider():
     try:
-        AppConfig.from_env({"METER_PROVIDER": "shelly_3em"}, load_dotenv=False)
+        AppConfig.from_env(
+            {"METER_PROVIDER": "shelly_3em", "SHELLY_3EM_BASE_URL": ""},
+            load_dotenv=False,
+    )
     except ValueError as exc:
-        assert "SHELLY_3EM_BASE_URL" in str(exc)
+        assert "shelly_3em_base_url" in str(exc)
     else:
         raise AssertionError("Expected missing Shelly base URL to raise ValueError")

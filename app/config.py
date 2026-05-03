@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from app.models import ControlSettings, parse_float, parse_int
+from app.models import ControlSettings, parse_int
 
 
 def load_dotenv_file(path: str | Path = ".env") -> None:
@@ -55,6 +55,14 @@ class AppConfig:
         control = ControlSettings.from_mapping(
             {
                 "ui_language": source.get("UI_LANGUAGE", defaults.ui_language),
+                "meter_provider": source.get("METER_PROVIDER", defaults.meter_provider),
+                "meter_power_sign": source.get("METER_POWER_SIGN", defaults.meter_power_sign),
+                "shelly_3em_base_url": source.get("SHELLY_3EM_BASE_URL", defaults.shelly_3em_base_url),
+                "shelly_3em_generation": source.get("SHELLY_3EM_GENERATION", defaults.shelly_3em_generation),
+                "shelly_3em_timeout_seconds": source.get(
+                    "SHELLY_3EM_TIMEOUT_SECONDS",
+                    defaults.shelly_3em_timeout_seconds,
+                ),
                 "zero_export_enabled": source.get("ZERO_EXPORT_ENABLED", defaults.zero_export_enabled),
                 "target_grid_power_w": source.get("TARGET_GRID_POWER_W", defaults.target_grid_power_w),
                 "grid_power_band_min_w": source.get("GRID_POWER_BAND_MIN_W", defaults.grid_power_band_min_w),
@@ -84,14 +92,11 @@ class AppConfig:
             mqtt_discovery_prefix=str(source.get("MQTT_DISCOVERY_PREFIX", "homeassistant")).strip("/"),
             database_path=str(source.get("DATABASE_PATH", "/data/growatt_gateway.sqlite")),
             web_port=parse_int(source.get("WEB_PORT", 8080), "WEB_PORT"),
-            meter_provider=str(source.get("METER_PROVIDER", "mock")).strip().lower(),
-            meter_power_sign=str(source.get("METER_POWER_SIGN", "normal")).strip().lower(),
-            shelly_3em_base_url=_empty_to_none(source.get("SHELLY_3EM_BASE_URL")),
-            shelly_3em_generation=str(source.get("SHELLY_3EM_GENERATION", "auto")).strip().lower(),
-            shelly_3em_timeout_seconds=parse_float(
-                source.get("SHELLY_3EM_TIMEOUT_SECONDS", 3.0),
-                "SHELLY_3EM_TIMEOUT_SECONDS",
-            ),
+            meter_provider=control.meter_provider,
+            meter_power_sign=control.meter_power_sign,
+            shelly_3em_base_url=control.shelly_3em_base_url,
+            shelly_3em_generation=control.shelly_3em_generation,
+            shelly_3em_timeout_seconds=control.shelly_3em_timeout_seconds,
             control=control,
         )
         config.validate()

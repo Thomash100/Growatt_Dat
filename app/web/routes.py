@@ -125,10 +125,11 @@ async def api_latest_meter(request: Request):
 async def api_meter_integrations(request: Request):
     service = _service(request)
     return {
-        "active_provider": service.config.meter_provider,
+        "active_provider": service.settings.meter_provider,
         "available_providers": ["mock", "shelly_3em"],
-        "meter_power_sign": service.config.meter_power_sign,
-        "shelly_3em_generation": service.config.shelly_3em_generation,
+        "meter_power_sign": service.settings.meter_power_sign,
+        "shelly_3em_base_url": service.settings.shelly_3em_base_url,
+        "shelly_3em_generation": service.settings.shelly_3em_generation,
     }
 
 

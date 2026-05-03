@@ -66,7 +66,7 @@ Wichtige Variablen:
 - `UI_LANGUAGE` (`de` oder `en`)
 - `METER_PROVIDER` (`mock` oder `shelly_3em`)
 - `METER_POWER_SIGN` (`normal` oder `inverted`)
-- `SHELLY_3EM_BASE_URL` (z. B. `http://192.168.1.100`)
+- `SHELLY_3EM_BASE_URL` (z. B. `http://192.168.178.252`)
 - `SHELLY_3EM_GENERATION` (`auto`, `gen1` oder `gen2`)
 - `SHELLY_3EM_TIMEOUT_SECONDS`
 - `ZERO_EXPORT_ENABLED`
@@ -141,12 +141,14 @@ Der Regler nutzt den lokalen Grid-Meter-Wert als `grid_power_w`. Standard ist `M
 
 ```env
 METER_PROVIDER=shelly_3em
-SHELLY_3EM_BASE_URL=http://192.168.1.100
-SHELLY_3EM_GENERATION=auto
+SHELLY_3EM_BASE_URL=http://192.168.178.252
+SHELLY_3EM_GENERATION=gen2
 METER_POWER_SIGN=normal
 ```
 
-Wenn die Stromrichtung deiner Wandler invertiert ist, setze `METER_POWER_SIGN=inverted`. Shelly 3EM Gen1 wird über `/status` gelesen, Shelly Pro/Gen2 über `EM.GetStatus`; bei `auto` versucht der Adapter beides. Bei Meter-Fehlern setzt der Regler keine Leistungserhöhung.
+Diese Werte sind Startwerte aus `.env`; danach kannst du Messgeraet-Typ, Shelly-Adresse, Generation, Timeout und Stromrichtung auf `/settings` aendern. Die Aenderungen werden in SQLite gespeichert und ohne Container-Neustart wirksam. Dein Shelly unter `192.168.178.252` antwortet als Shelly Pro/Gen2 per RPC, daher ist `SHELLY_3EM_GENERATION=gen2` passend.
+
+Wenn die Stromrichtung deiner Wandler invertiert ist, setze `METER_POWER_SIGN=inverted` oder waehle auf der Website `Invertiert`. Shelly 3EM Gen1 wird über `/status` gelesen, Shelly Pro/Gen2 über `EM.GetStatus`; bei `auto` versucht der Adapter beides. Bei Meter-Fehlern setzt der Regler keine Leistungserhöhung.
 
 ## Home-Assistant-Integration
 

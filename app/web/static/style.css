@@ -180,6 +180,11 @@ p {
   gap: 16px;
 }
 
+.form-section-title {
+  padding-top: 4px;
+  color: var(--text);
+}
+
 label {
   display: grid;
   gap: 7px;

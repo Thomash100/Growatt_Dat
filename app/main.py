@@ -33,7 +33,7 @@ class GatewayService:
         self.store = store
         self.settings = settings
         self.device = MockGrowattDevice(max_output_power_w=settings.max_output_power_w)
-        self.meter = create_meter(config)
+        self.meter = create_meter(settings)
         self.controller = ZeroExportController()
         self.mqtt = MqttPublisher(config)
         self.latest_measurement: Measurement | None = None
@@ -50,7 +50,7 @@ class GatewayService:
         self.store.add_log(
             "INFO",
             "system",
-            f"Gateway service started with {self.config.meter_provider} grid meter",
+            f"Gateway service started with {self.settings.meter_provider} grid meter",
         )
         self._task = asyncio.create_task(self._run_forever(), name="gateway-control-loop")
 
@@ -66,7 +66,12 @@ class GatewayService:
 
     async def update_settings(self, settings: ControlSettings) -> None:
         async with self._settings_lock:
+            meter_changed = self._meter_settings_changed(self.settings, settings)
             self.settings = settings
+            if meter_changed:
+                self.meter = create_meter(settings)
+                self.latest_meter_reading = None
+                self.store.add_log("INFO", "meter", f"Grid meter reconfigured to {settings.meter_provider}")
             self.store.save_settings(settings)
             self.mqtt.publish_settings(settings)
             self.store.add_log("INFO", "system", "Settings updated")
@@ -145,7 +150,7 @@ class GatewayService:
         return {
             "timestamp": datetime_to_iso(utc_now()),
             "device_status": "unknown" if self.latest_measurement is None else self.latest_measurement.device_status,
-            "meter_provider": self.config.meter_provider,
+            "meter_provider": self.settings.meter_provider,
             "meter_source": None if self.latest_meter_reading is None else self.latest_meter_reading.source,
             "meter_status": "unknown" if self.latest_meter_reading is None else self.latest_meter_reading.status,
             "mqtt_connected": self.mqtt.connected,
@@ -164,10 +169,23 @@ class GatewayService:
                 timestamp=utc_now(),
                 grid_power_w=fallback_power,
                 status="error",
-                source=self.config.meter_provider,
+                source=self.settings.meter_provider,
                 phase_powers_w={},
                 error_status=str(exc),
             )
+
+    @staticmethod
+    def _meter_settings_changed(previous: ControlSettings, updated: ControlSettings) -> bool:
+        return any(
+            getattr(previous, field) != getattr(updated, field)
+            for field in (
+                "meter_provider",
+                "meter_power_sign",
+                "shelly_3em_base_url",
+                "shelly_3em_generation",
+                "shelly_3em_timeout_seconds",
+            )
+        )
 
 
 @asynccontextmanager

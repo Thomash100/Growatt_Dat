@@ -26,6 +26,41 @@
         {% endfor %}
       </select>
     </label>
+  </div>
+
+  <h2 class="form-section-title">{{ t("meter_settings") }}</h2>
+
+  <div class="form-grid">
+    <label>{{ t("meter_provider") }}
+      <select name="meter_provider">
+        <option value="mock" {% if settings.meter_provider == "mock" %}selected{% endif %}>{{ t("meter_provider_mock") }}</option>
+        <option value="shelly_3em" {% if settings.meter_provider == "shelly_3em" %}selected{% endif %}>{{ t("meter_provider_shelly_3em") }}</option>
+      </select>
+    </label>
+    <label>{{ t("shelly_3em_base_url") }}
+      <input type="text" name="shelly_3em_base_url" value="{{ settings.shelly_3em_base_url }}" placeholder="http://192.168.178.252">
+    </label>
+    <label>{{ t("shelly_3em_generation") }}
+      <select name="shelly_3em_generation">
+        <option value="auto" {% if settings.shelly_3em_generation == "auto" %}selected{% endif %}>{{ t("shelly_generation_auto") }}</option>
+        <option value="gen1" {% if settings.shelly_3em_generation == "gen1" %}selected{% endif %}>{{ t("shelly_generation_gen1") }}</option>
+        <option value="gen2" {% if settings.shelly_3em_generation == "gen2" %}selected{% endif %}>{{ t("shelly_generation_gen2") }}</option>
+      </select>
+    </label>
+    <label>{{ t("meter_power_sign") }}
+      <select name="meter_power_sign">
+        <option value="normal" {% if settings.meter_power_sign == "normal" %}selected{% endif %}>{{ t("meter_power_sign_normal") }}</option>
+        <option value="inverted" {% if settings.meter_power_sign == "inverted" %}selected{% endif %}>{{ t("meter_power_sign_inverted") }}</option>
+      </select>
+    </label>
+    <label>{{ t("shelly_3em_timeout") }}
+      <input type="number" name="shelly_3em_timeout_seconds" value="{{ settings.shelly_3em_timeout_seconds }}" min="0.2" step="0.1">
+    </label>
+  </div>
+
+  <h2 class="form-section-title">{{ t("control_settings") }}</h2>
+
+  <div class="form-grid">
     <label>{{ t("target_grid_power") }}
       <input type="number" name="target_grid_power_w" value="{{ settings.target_grid_power_w }}" step="1">
     </label>

@@ -99,6 +99,11 @@ class MeterReading:
 @dataclass(frozen=True, slots=True)
 class ControlSettings:
     ui_language: str = "de"
+    meter_provider: str = "mock"
+    meter_power_sign: str = "normal"
+    shelly_3em_base_url: str = "http://192.168.178.252"
+    shelly_3em_generation: str = "auto"
+    shelly_3em_timeout_seconds: float = 3.0
     zero_export_enabled: bool = True
     target_grid_power_w: int = 30
     grid_power_band_min_w: int = 20
@@ -122,14 +127,25 @@ class ControlSettings:
     ) -> "ControlSettings":
         current = (base or cls()).to_dict()
         bool_fields = {"zero_export_enabled"}
+        lowercase_string_fields = {
+            "ui_language",
+            "meter_provider",
+            "meter_power_sign",
+            "shelly_3em_generation",
+        }
+        float_fields = {"shelly_3em_timeout_seconds"}
         for field in fields(cls):
             if field.name not in values:
                 continue
             raw_value = values[field.name]
-            if field.name == "ui_language":
+            if field.name == "shelly_3em_base_url":
+                current[field.name] = str(raw_value).strip()
+            elif field.name in lowercase_string_fields:
                 current[field.name] = str(raw_value).strip().lower()
             elif field.name in bool_fields:
                 current[field.name] = parse_bool(raw_value)
+            elif field.name in float_fields:
+                current[field.name] = parse_float(raw_value, field.name)
             else:
                 current[field.name] = parse_int(raw_value, field.name)
         settings = cls(**current)
@@ -139,6 +155,16 @@ class ControlSettings:
     def validate(self) -> None:
         if self.ui_language not in {"de", "en"}:
             raise ValueError("ui_language must be 'de' or 'en'")
+        if self.meter_provider not in {"mock", "shelly_3em"}:
+            raise ValueError("meter_provider must be 'mock' or 'shelly_3em'")
+        if self.meter_power_sign not in {"normal", "inverted"}:
+            raise ValueError("meter_power_sign must be 'normal' or 'inverted'")
+        if self.shelly_3em_generation not in {"auto", "gen1", "gen2"}:
+            raise ValueError("shelly_3em_generation must be 'auto', 'gen1', or 'gen2'")
+        if self.shelly_3em_timeout_seconds <= 0:
+            raise ValueError("shelly_3em_timeout_seconds must be greater than 0")
+        if self.meter_provider == "shelly_3em" and not self.shelly_3em_base_url:
+            raise ValueError("shelly_3em_base_url is required when meter_provider=shelly_3em")
         if self.control_interval_seconds <= 0:
             raise ValueError("control_interval_seconds must be greater than 0")
         if self.stale_measurement_seconds <= 0:
