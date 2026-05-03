@@ -8,7 +8,7 @@
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/">Growatt Local Gateway</a>
+      <a class="brand" href="/">Growatt Local Gateway <span class="version-badge">{{ version_label }}</span></a>
       <nav class="nav">
         <a href="/">{{ t("nav_dashboard") }}</a>
         <a href="/live">{{ t("nav_live") }}</a>
@@ -19,6 +19,20 @@
     <main class="page">
       {% block content %}{% endblock %}
     </main>
+    <div class="release-backdrop" id="releaseModal" data-release-version="{{ version_label }}" hidden>
+      <section class="release-modal" role="dialog" aria-modal="true" aria-labelledby="releaseTitle">
+        <button class="release-close" type="button" data-release-close aria-label="{{ t("close") }}">x</button>
+        <p class="release-kicker">{{ version_label }}</p>
+        <h2 id="releaseTitle">{{ release_notes.title }}</h2>
+        <p>{{ release_notes.summary }}</p>
+        <ul class="release-list">
+          {% for change in release_notes.changes %}
+          <li>{{ change }}</li>
+          {% endfor %}
+        </ul>
+        <button class="primary-button" type="button" data-release-close>{{ t("release_ok") }}</button>
+      </section>
+    </div>
     {% block scripts %}
       <script>
         window.GLG_I18N = {{ i18n | tojson }};

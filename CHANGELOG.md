@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.001.2 - 2026-05-03
+
+- Versionsnummer in der Weboberfläche sichtbar gemacht.
+- Einmaliges Update-Popup mit Änderungsliste ergänzt.
+- Release-Hinweis wird pro Browser und Version gespeichert.
+
 ## V0.001.1 - 2026-05-03
 
 - Lesbare Projektversion `V0.001.1` eingeführt.

@@ -134,6 +134,43 @@ function updateCharts(payload) {
   pushPoint(charts.deviation, label, [measurements.grid_power_w - settings.target_grid_power_w]);
 }
 
+function setupReleaseNotice() {
+  const modal = document.getElementById("releaseModal");
+  if (!modal) return;
+  const version = modal.dataset.releaseVersion || "unknown";
+  const storageKey = `growattLocalGateway.releaseSeen.${version}`;
+  let alreadySeen = false;
+  try {
+    alreadySeen = window.localStorage.getItem(storageKey) === "true";
+  } catch (error) {
+    alreadySeen = false;
+  }
+  if (!alreadySeen) {
+    modal.hidden = false;
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    try {
+      window.localStorage.setItem(storageKey, "true");
+    } catch (error) {
+      return;
+    }
+  }
+
+  modal.querySelectorAll("[data-release-close]").forEach((element) => {
+    element.addEventListener("click", closeModal);
+  });
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeModal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) closeModal();
+  });
+}
+
 socket.addEventListener("message", (event) => {
   const payload = JSON.parse(event.data);
   updateFields(payload);
@@ -147,3 +184,4 @@ socket.addEventListener("close", () => {
 });
 
 setupCharts();
+setupReleaseNotice();

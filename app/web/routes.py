@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
 from app.models import ControlSettings
+from app.version import VERSION_LABEL, release_notes_for
 from app.web.i18n import SUPPORTED_LANGUAGES, browser_translations, normalize_language, translate
 
 
@@ -25,6 +26,8 @@ def _template_context(request: Request, **extra):
         "language": language,
         "languages": SUPPORTED_LANGUAGES,
         "i18n": browser_translations(language),
+        "version_label": VERSION_LABEL,
+        "release_notes": release_notes_for(language),
         "t": lambda key: translate(key, language),
     }
     context.update(extra)
