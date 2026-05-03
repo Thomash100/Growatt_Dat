@@ -4,7 +4,7 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
-Aktuelle Version: `V0.001.4`
+Aktuelle Version: `V0.001.5`
 
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
@@ -17,6 +17,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 - Mock-Growatt-Gerät mit realistischen Schwankungen.
 - Abstraktes `GrowattDevice`-Interface für spätere Adapter.
 - Offene lokale Messgeräte-Schnittstelle mit Mock-Meter und Shelly-3EM-Adapter.
+- Integrationen-Seite mit lokalem Netzwerk-Scan fuer Shelly 3EM / Shelly Pro 3EM.
 - Zero-Export-Regelalgorithmus mit Safety-Checks und Fail-Safe.
 - MQTT-Publisher für Home Assistant und Mosquitto.
 - MQTT Auto Discovery unter `homeassistant/...`.
@@ -75,6 +76,10 @@ Wichtige Variablen:
 - `UPDATE_CHECK_ENABLED`
 - `UPDATE_REPOSITORY`
 - `UPDATE_CHECK_TIMEOUT_SECONDS`
+- `INTEGRATION_SCAN_DEFAULT_CIDR`
+- `INTEGRATION_SCAN_TIMEOUT_SECONDS`
+- `INTEGRATION_SCAN_CONCURRENCY`
+- `INTEGRATION_SCAN_MAX_HOSTS`
 - `ZERO_EXPORT_ENABLED`
 - `TARGET_GRID_POWER_W`
 - `GRID_POWER_BAND_MIN_W`
@@ -120,10 +125,13 @@ Lokale Endpunkte:
 - `/`
 - `/live`
 - `/settings`
+- `/integrations`
 - `/logs`
 - `/update`
 - `/api/status`
 - `/api/update/check`
+- `/api/integrations/scan`
+- `/api/integrations/apply`
 - `/api/settings`
 - `/api/meters`
 - `/api/meter/latest`
@@ -157,6 +165,19 @@ METER_POWER_SIGN=normal
 Diese Werte sind Startwerte aus `.env`; danach kannst du Messgeraet-Typ, Shelly-Adresse, Generation, Timeout und Stromrichtung auf `/settings` aendern. Die Aenderungen werden in SQLite gespeichert und ohne Container-Neustart wirksam. Dein Shelly unter `192.168.178.252` antwortet als Shelly Pro/Gen2 per RPC, daher ist `SHELLY_3EM_GENERATION=gen2` passend.
 
 Wenn die Stromrichtung deiner Wandler invertiert ist, setze `METER_POWER_SIGN=inverted` oder waehle auf der Website `Invertiert`. Shelly 3EM Gen1 wird über `/status` gelesen, Shelly Pro/Gen2 über `EM.GetStatus`; bei `auto` versucht der Adapter beides. Bei Meter-Fehlern setzt der Regler keine Leistungserhöhung.
+
+## Integrationen und Netzwerk-Scan
+
+Unter `/integrations` kann ein lokaler Scan im privaten Heimnetz gestartet werden, z. B. `192.168.178.0/24`. Der Scanner nutzt kurze HTTP-Abfragen fuer bekannte Integrationen und ist auf private IPv4-Netze begrenzt. Gefundene Shelly 3EM / Shelly Pro 3EM Geraete koennen direkt als Messgeraet uebernommen werden.
+
+Konfigurierbare Scan-Werte:
+
+```env
+INTEGRATION_SCAN_DEFAULT_CIDR=192.168.178.0/24
+INTEGRATION_SCAN_TIMEOUT_SECONDS=0.6
+INTEGRATION_SCAN_CONCURRENCY=32
+INTEGRATION_SCAN_MAX_HOSTS=254
+```
 
 ## Home-Assistant-Integration
 

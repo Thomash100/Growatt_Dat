@@ -41,6 +41,10 @@ class AppConfig:
     update_check_enabled: bool = True
     update_repository: str = PROJECT_REPOSITORY
     update_check_timeout_seconds: float = 4.0
+    integration_scan_default_cidr: str = "192.168.178.0/24"
+    integration_scan_timeout_seconds: float = 0.6
+    integration_scan_concurrency: int = 32
+    integration_scan_max_hosts: int = 254
     control: ControlSettings = ControlSettings()
 
     @classmethod
@@ -107,6 +111,21 @@ class AppConfig:
                 source.get("UPDATE_CHECK_TIMEOUT_SECONDS", 4.0),
                 "UPDATE_CHECK_TIMEOUT_SECONDS",
             ),
+            integration_scan_default_cidr=str(
+                source.get("INTEGRATION_SCAN_DEFAULT_CIDR", "192.168.178.0/24")
+            ).strip(),
+            integration_scan_timeout_seconds=parse_float(
+                source.get("INTEGRATION_SCAN_TIMEOUT_SECONDS", 0.6),
+                "INTEGRATION_SCAN_TIMEOUT_SECONDS",
+            ),
+            integration_scan_concurrency=parse_int(
+                source.get("INTEGRATION_SCAN_CONCURRENCY", 32),
+                "INTEGRATION_SCAN_CONCURRENCY",
+            ),
+            integration_scan_max_hosts=parse_int(
+                source.get("INTEGRATION_SCAN_MAX_HOSTS", 254),
+                "INTEGRATION_SCAN_MAX_HOSTS",
+            ),
             control=control,
         )
         config.validate()
@@ -133,6 +152,14 @@ class AppConfig:
             raise ValueError("UPDATE_REPOSITORY must use the 'owner/repository' format")
         if self.update_check_timeout_seconds <= 0:
             raise ValueError("UPDATE_CHECK_TIMEOUT_SECONDS must be greater than 0")
+        if not self.integration_scan_default_cidr:
+            raise ValueError("INTEGRATION_SCAN_DEFAULT_CIDR must not be empty")
+        if self.integration_scan_timeout_seconds <= 0:
+            raise ValueError("INTEGRATION_SCAN_TIMEOUT_SECONDS must be greater than 0")
+        if self.integration_scan_concurrency <= 0:
+            raise ValueError("INTEGRATION_SCAN_CONCURRENCY must be greater than 0")
+        if not 1 <= self.integration_scan_max_hosts <= 512:
+            raise ValueError("INTEGRATION_SCAN_MAX_HOSTS must be between 1 and 512")
         if self.meter_provider == "shelly_3em" and not self.shelly_3em_base_url:
             raise ValueError("SHELLY_3EM_BASE_URL is required when METER_PROVIDER=shelly_3em")
         self.control.validate()

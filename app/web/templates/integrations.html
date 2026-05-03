@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>{{ t("integrations_title") }}</h1>
+    <p>{{ t("integrations_subtitle") }}</p>
+  </div>
+</section>
+
+<section class="update-panel integration-scan-panel">
+  <h2>{{ t("network_scan") }}</h2>
+  <p>{{ t("network_scan_notice") }}</p>
+  <form class="scan-form" id="integrationScanForm">
+    <label>{{ t("scan_range") }}
+      <input type="text" id="integrationScanCidr" name="cidr" value="{{ default_scan_cidr }}" placeholder="192.168.178.0/24">
+    </label>
+    <button class="primary-button" type="submit">{{ t("start_scan") }}</button>
+  </form>
+  <p class="muted-small">{{ t("scan_limit") }}: {{ scan_max_hosts }}</p>
+  <div class="notice" id="integrationScanStatus" hidden></div>
+</section>
+
+<section class="update-panel">
+  <h2>{{ t("found_integrations") }}</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t("ip_address") }}</th>
+          <th>{{ t("integration_type") }}</th>
+          <th>{{ t("name") }}</th>
+          <th>{{ t("model") }}</th>
+          <th>{{ t("generation") }}</th>
+          <th>{{ t("action") }}</th>
+        </tr>
+      </thead>
+      <tbody id="integrationResults">
+        <tr>
+          <td colspan="6">{{ t("scan_not_started") }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

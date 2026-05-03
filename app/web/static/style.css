@@ -249,6 +249,28 @@ select {
   background: var(--accent-dark);
 }
 
+.small-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.small-button:hover {
+  background: var(--accent-dark);
+}
+
+.small-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 .primary-button.as-link {
   display: inline-flex;
   align-items: center;
@@ -395,6 +417,22 @@ select {
   box-shadow: var(--shadow);
 }
 
+.integration-scan-panel {
+  margin-bottom: 16px;
+}
+
+.scan-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.muted-small {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .update-panel.wide {
   grid-column: 1 / -1;
 }
@@ -497,6 +535,10 @@ td {
   }
 
   .release-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .scan-form {
     grid-template-columns: 1fr;
   }
 }

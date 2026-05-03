@@ -1,4 +1,4 @@
-VERSION = "0.001.4"
+VERSION = "0.001.5"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Neue Update-Seite in der Weboberflaeche mit GitHub-Versionspruefung.",
-                    "API-Endpunkt /api/update/check meldet aktuelle und verfuegbare Version.",
-                    "Navigations-Badge zeigt an, wenn eine neuere GitHub-Version verfuegbar ist.",
+                    "Neue Integrationen-Seite mit lokalem Netzwerk-Scan.",
+                    "Shelly 3EM und Shelly Pro 3EM koennen automatisch erkannt werden.",
+                    "Gefundene Shelly-3EM-Geraete koennen direkt als Messgeraet uebernommen werden.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "README und Update-Dokumentation erklaeren Raspberry-Pi-Updates ueber GitHub.",
-                    "Update-Check ist per .env konfigurierbar und kann deaktiviert werden.",
+                    "Scan-Bereich, Timeout, Parallelitaet und Host-Limit sind per .env konfigurierbar.",
+                    "Navigation um Integrationen erweitert.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Release-Notizen verwenden robuste ASCII-Symbole fuer saubere Anzeige.",
+                    "Netzwerk-Scan ist auf private IPv4-Heimnetze begrenzt.",
                 ],
             },
         ],
@@ -45,24 +45,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "New web update page with GitHub version checks.",
-                    "API endpoint /api/update/check reports current and available versions.",
-                    "Navigation badge shows when a newer GitHub version is available.",
+                    "New integrations page with local network scanning.",
+                    "Shelly 3EM and Shelly Pro 3EM devices can be detected automatically.",
+                    "Detected Shelly 3EM devices can be applied directly as grid meters.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "README and update docs explain Raspberry Pi updates through GitHub.",
-                    "Update checks are configurable through .env and can be disabled.",
+                    "Scan range, timeout, concurrency, and host limit are configurable through .env.",
+                    "Navigation now includes integrations.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Release notes now use robust ASCII symbols for clean rendering.",
+                    "Network scanning is limited to private IPv4 home networks.",
                 ],
             },
         ],

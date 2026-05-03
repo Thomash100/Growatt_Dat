@@ -21,6 +21,10 @@ def test_config_loads_from_environment_mapping():
             "UPDATE_CHECK_ENABLED": "false",
             "UPDATE_REPOSITORY": "Example/Repo",
             "UPDATE_CHECK_TIMEOUT_SECONDS": "6.5",
+            "INTEGRATION_SCAN_DEFAULT_CIDR": "192.168.1.0/24",
+            "INTEGRATION_SCAN_TIMEOUT_SECONDS": "0.8",
+            "INTEGRATION_SCAN_CONCURRENCY": "16",
+            "INTEGRATION_SCAN_MAX_HOSTS": "128",
             "ZERO_EXPORT_ENABLED": "false",
             "TARGET_GRID_POWER_W": "40",
             "GRID_POWER_BAND_MIN_W": "25",
@@ -49,6 +53,10 @@ def test_config_loads_from_environment_mapping():
     assert config.update_check_enabled is False
     assert config.update_repository == "Example/Repo"
     assert config.update_check_timeout_seconds == 6.5
+    assert config.integration_scan_default_cidr == "192.168.1.0/24"
+    assert config.integration_scan_timeout_seconds == 0.8
+    assert config.integration_scan_concurrency == 16
+    assert config.integration_scan_max_hosts == 128
     assert config.control.ui_language == "en"
     assert config.control.zero_export_enabled is False
     assert config.control.target_grid_power_w == 40

@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.5 - 2026-05-03
+
+- Integrationen-Seite `/integrations` mit lokalem Netzwerk-Scan ergaenzt.
+- Shelly 3EM / Shelly Pro 3EM Erkennung fuer Gen1 REST und Gen2 RPC ergaenzt.
+- Gefundene Shelly-3EM-Geraete koennen als Messgeraet uebernommen werden.
+- Scan ist auf private IPv4-Netze begrenzt und per `.env` konfigurierbar.
+
 ## V0.001.4 - 2026-05-03
 
 - Update-Seite `/update` mit GitHub-Versionspruefung ergaenzt.

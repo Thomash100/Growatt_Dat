@@ -66,6 +66,12 @@ http://raspberrypi.local:8080/update
 
 Sie prueft GitHub auf eine neuere Version und zeigt die passenden Raspberry-Pi-Updatebefehle an.
 
+Die Integrationen-Seite mit lokalem Netzwerk-Scan ist erreichbar unter:
+
+```text
+http://raspberrypi.local:8080/integrations
+```
+
 ## Erstmaliger Push zu GitHub
 
 Wenn der Projektordner noch kein Git-Repository ist:

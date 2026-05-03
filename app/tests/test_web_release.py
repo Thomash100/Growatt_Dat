@@ -30,3 +30,16 @@ def test_update_page_renders_without_network_when_disabled(monkeypatch):
     assert VERSION_LABEL in response.text
     assert "Update-Status" in response.text
     assert "Update-Pruefung ist deaktiviert" in response.text
+
+
+def test_integrations_page_renders(monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
+    monkeypatch.setenv("UPDATE_CHECK_ENABLED", "false")
+
+    with TestClient(app) as client:
+        response = client.get("/integrations")
+
+    assert response.status_code == 200
+    assert VERSION_LABEL in response.text
+    assert "Integrationen" in response.text
+    assert "192.168.178.0/24" in response.text

@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import AppConfig
 from app.control.zero_export import ZeroExportController
 from app.growatt.mock_device import MockGrowattDevice
+from app.integrations.scanner import IntegrationScanner
 from app.logging_config import configure_logging
 from app.meters.factory import create_meter
 from app.models import ControlDecision, ControlSettings, Measurement, MeterReading, datetime_to_iso, utc_now
@@ -42,6 +43,11 @@ class GatewayService:
             config.update_repository,
             timeout_seconds=config.update_check_timeout_seconds,
             enabled=config.update_check_enabled,
+        )
+        self.integration_scanner = IntegrationScanner(
+            timeout_seconds=config.integration_scan_timeout_seconds,
+            concurrency=config.integration_scan_concurrency,
+            max_hosts=config.integration_scan_max_hosts,
         )
         self.latest_measurement: Measurement | None = None
         self.latest_meter_reading: MeterReading | None = None
@@ -95,6 +101,41 @@ class GatewayService:
         if payload.get("update_available"):
             self.store.add_log("INFO", "system", f"Update available: {payload.get('latest_version_label')}")
         return payload
+
+    async def scan_integrations(self, cidr: str | None = None) -> dict[str, Any]:
+        scan_range = cidr or self.config.integration_scan_default_cidr
+        result = await self.integration_scanner.scan(scan_range)
+        payload = result.to_dict()
+        self.store.add_log(
+            "INFO",
+            "system",
+            f"Integration scan {payload['cidr']}: {len(payload['candidates'])} candidate(s)",
+        )
+        return payload
+
+    async def apply_integration(self, payload: dict[str, Any]) -> dict[str, Any]:
+        integration_type = str(payload.get("integration_type", "")).strip().lower()
+        if integration_type != "shelly_3em":
+            raise ValueError("Only shelly_3em integration apply is supported")
+        base_url = str(payload.get("base_url", "")).strip().rstrip("/")
+        generation = str(payload.get("generation", "auto")).strip().lower()
+        if not base_url.startswith("http://"):
+            raise ValueError("base_url must start with http://")
+        if generation not in {"auto", "gen1", "gen2"}:
+            raise ValueError("generation must be auto, gen1, or gen2")
+
+        updated = ControlSettings.from_mapping(
+            {
+                "meter_provider": "shelly_3em",
+                "shelly_3em_base_url": base_url,
+                "shelly_3em_generation": generation,
+                "meter_power_sign": payload.get("meter_power_sign", self.settings.meter_power_sign),
+            },
+            base=self.settings,
+        )
+        await self.update_settings(updated)
+        self.store.add_log("INFO", "system", f"Integration applied: shelly_3em at {base_url}")
+        return updated.to_dict()
 
     def snapshot(self) -> dict[str, Any]:
         status_payload = self._status_payload()

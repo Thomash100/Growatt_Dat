@@ -88,6 +88,20 @@ async def logs_page(request: Request):
     return templates.TemplateResponse(request, "logs.html", _template_context(request, logs=logs))
 
 
+@router.get("/integrations", response_class=HTMLResponse)
+async def integrations_page(request: Request):
+    service = _service(request)
+    return templates.TemplateResponse(
+        request,
+        "integrations.html",
+        _template_context(
+            request,
+            default_scan_cidr=service.config.integration_scan_default_cidr,
+            scan_max_hosts=service.config.integration_scan_max_hosts,
+        ),
+    )
+
+
 @router.get("/update", response_class=HTMLResponse)
 async def update_page(request: Request, force: bool = Query(default=False)):
     update_status = await _service(request).check_updates(force=force)
@@ -151,6 +165,23 @@ async def api_meter_integrations(request: Request):
         "shelly_3em_base_url": service.settings.shelly_3em_base_url,
         "shelly_3em_generation": service.settings.shelly_3em_generation,
     }
+
+
+@router.get("/api/integrations/scan")
+async def api_integration_scan(request: Request, cidr: str | None = Query(default=None)):
+    try:
+        return await _service(request).scan_integrations(cidr)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/api/integrations/apply")
+async def api_apply_integration(request: Request):
+    payload = await request.json()
+    try:
+        return await _service(request).apply_integration(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/api/measurements/history")

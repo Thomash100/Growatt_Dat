@@ -189,6 +189,115 @@ function setupUpdateIndicator() {
     });
 }
 
+function setupIntegrationScan() {
+  const form = document.getElementById("integrationScanForm");
+  const cidrInput = document.getElementById("integrationScanCidr");
+  const statusBox = document.getElementById("integrationScanStatus");
+  const resultsBody = document.getElementById("integrationResults");
+  if (!form || !cidrInput || !statusBox || !resultsBody) return;
+
+  function setStatus(message, important = false) {
+    statusBox.textContent = message;
+    statusBox.hidden = false;
+    statusBox.classList.toggle("important", important);
+  }
+
+  function clearResults(message) {
+    resultsBody.replaceChildren();
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.textContent = message;
+    row.appendChild(cell);
+    resultsBody.appendChild(row);
+  }
+
+  function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value || "-";
+    row.appendChild(cell);
+    return cell;
+  }
+
+  async function applyCandidate(candidate, button) {
+    button.disabled = true;
+    const response = await fetch("/api/integrations/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        integration_type: candidate.integration_type,
+        base_url: candidate.base_url,
+        generation: candidate.generation || "auto",
+        meter_power_sign: "normal"
+      })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || response.statusText);
+    }
+    setStatus(i18n.labels.integrationApplied || "Integration applied.");
+  }
+
+  function renderCandidates(candidates) {
+    resultsBody.replaceChildren();
+    if (!candidates.length) {
+      clearResults(i18n.labels.scanNoResults || "No matching integrations found.");
+      return;
+    }
+    candidates.forEach((candidate) => {
+      const row = document.createElement("tr");
+      addCell(row, candidate.ip_address);
+      addCell(row, candidate.integration_type);
+      addCell(row, candidate.name);
+      addCell(row, candidate.model);
+      addCell(row, candidate.generation);
+      const actionCell = document.createElement("td");
+      if (candidate.supported) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "small-button";
+        button.textContent = i18n.labels.applyIntegration || "Apply";
+        button.addEventListener("click", async () => {
+          try {
+            await applyCandidate(candidate, button);
+          } catch (error) {
+            button.disabled = false;
+            setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+          }
+        });
+        actionCell.appendChild(button);
+      } else {
+        actionCell.textContent = i18n.labels.unsupportedIntegration || "Not supported yet";
+      }
+      row.appendChild(actionCell);
+      resultsBody.appendChild(row);
+    });
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const cidr = cidrInput.value.trim();
+    setStatus(i18n.labels.scanRunning || "Scan running...");
+    clearResults(i18n.labels.scanRunning || "Scan running...");
+    try {
+      const response = await fetch(`/api/integrations/scan?cidr=${encodeURIComponent(cidr)}`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || response.statusText);
+      }
+      const payload = await response.json();
+      setStatus(
+        `${payload.scanned_hosts} ${i18n.labels.hostsScanned || "hosts scanned"}, ` +
+        `${payload.candidates.length} ${i18n.labels.candidatesFound || "candidate(s)"}`
+      );
+      renderCandidates(payload.candidates);
+    } catch (error) {
+      clearResults(i18n.labels.scanNoResults || "No matching integrations found.");
+      setStatus(`${i18n.labels.scanFailed || "Scan failed"}: ${error.message}`, true);
+    }
+  });
+}
+
 socket.addEventListener("message", (event) => {
   const payload = JSON.parse(event.data);
   updateFields(payload);
@@ -204,3 +313,4 @@ socket.addEventListener("close", () => {
 setupCharts();
 setupReleaseNotice();
 setupUpdateIndicator();
+setupIntegrationScan();
