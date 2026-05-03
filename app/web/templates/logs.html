@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>Logs</h1>
+    <p>Letzte 200 lokale Logeinträge aus SQLite.</p>
+  </div>
+</section>
+
+<section class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Zeit</th>
+        <th>Level</th>
+        <th>Quelle</th>
+        <th>Meldung</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in logs %}
+      <tr>
+        <td>{{ entry.timestamp }}</td>
+        <td>{{ entry.level }}</td>
+        <td>{{ entry.source }}</td>
+        <td>{{ entry.message }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4">Noch keine Logeinträge vorhanden.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+

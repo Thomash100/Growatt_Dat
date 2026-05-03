@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>Einstellungen</h1>
+    <p>Änderungen werden in SQLite gespeichert und im laufenden Dienst übernommen.</p>
+  </div>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+<form class="settings-form" method="post" action="/settings">
+  <label class="toggle-row">
+    <input type="checkbox" name="zero_export_enabled" value="true" {% if settings.zero_export_enabled %}checked{% endif %}>
+    <span>Zero Export aktiv</span>
+  </label>
+
+  <div class="form-grid">
+    <label>Ziel-Netzbezug W
+      <input type="number" name="target_grid_power_w" value="{{ settings.target_grid_power_w }}" step="1">
+    </label>
+    <label>Totband min W
+      <input type="number" name="grid_power_band_min_w" value="{{ settings.grid_power_band_min_w }}" step="1">
+    </label>
+    <label>Totband max W
+      <input type="number" name="grid_power_band_max_w" value="{{ settings.grid_power_band_max_w }}" step="1">
+    </label>
+    <label>Regelintervall s
+      <input type="number" name="control_interval_seconds" value="{{ settings.control_interval_seconds }}" min="1" step="1">
+    </label>
+    <label>Mindeständerung W
+      <input type="number" name="min_output_change_w" value="{{ settings.min_output_change_w }}" min="0" step="1">
+    </label>
+    <label>Schrittweite W
+      <input type="number" name="output_step_w" value="{{ settings.output_step_w }}" min="1" step="1">
+    </label>
+    <label>Max. Ausgangsleistung W
+      <input type="number" name="max_output_power_w" value="{{ settings.max_output_power_w }}" min="0" step="1">
+    </label>
+    <label>Min. Ausgangsleistung W
+      <input type="number" name="min_output_power_w" value="{{ settings.min_output_power_w }}" min="0" step="1">
+    </label>
+    <label>Mindest-SOC %
+      <input type="number" name="min_soc_percent" value="{{ settings.min_soc_percent }}" min="0" max="100" step="1">
+    </label>
+    <label>Messwertalter s
+      <input type="number" name="stale_measurement_seconds" value="{{ settings.stale_measurement_seconds }}" min="1" step="1">
+    </label>
+  </div>
+
+  <button class="primary-button" type="submit">Speichern</button>
+</form>
+{% endblock %}
+

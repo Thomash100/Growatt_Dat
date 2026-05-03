@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>Live-Grafik</h1>
+    <p>WebSocket-Aktualisierung für Messwerte, Sollwerte und Regelabweichung.</p>
+  </div>
+  <span class="pill" data-field="status.mqtt_connected" data-boolean="true">-</span>
+</section>
+
+<section id="liveCharts" class="chart-grid">
+  <article class="chart-panel">
+    <h2>Netzleistung</h2>
+    <canvas id="gridChart"></canvas>
+  </article>
+  <article class="chart-panel">
+    <h2>Ausgangsleistung</h2>
+    <canvas id="outputChart"></canvas>
+  </article>
+  <article class="chart-panel">
+    <h2>PV-Leistung</h2>
+    <canvas id="pvChart"></canvas>
+  </article>
+  <article class="chart-panel">
+    <h2>Batterie-SOC</h2>
+    <canvas id="socChart"></canvas>
+  </article>
+  <article class="chart-panel">
+    <h2>Sollwert vs. Istwert</h2>
+    <canvas id="targetChart"></canvas>
+  </article>
+  <article class="chart-panel">
+    <h2>Regelabweichung</h2>
+    <canvas id="deviationChart"></canvas>
+  </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="/static/app.js"></script>
+{% endblock %}
+

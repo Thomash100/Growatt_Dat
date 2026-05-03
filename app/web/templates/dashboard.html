@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Lokale Mock-Messwerte und aktueller Zero-Export-Status.</p>
+  </div>
+  <span class="pill" data-field="device_status">unknown</span>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <span>PV-Leistung</span>
+    <strong data-field="measurements.pv_power_w" data-unit=" W">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Ausgangsleistung</span>
+    <strong data-field="measurements.output_power_w" data-unit=" W">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Netzleistung</span>
+    <strong data-field="measurements.grid_power_w" data-unit=" W">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Batterie-SOC</span>
+    <strong data-field="measurements.battery_soc" data-unit=" %">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Lade-/Entladeleistung</span>
+    <strong data-field="measurements.charge_discharge_power_w" data-unit=" W">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Regelmodus</span>
+    <strong data-field="control.control_mode">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Zero Export</span>
+    <strong data-field="settings.zero_export_enabled" data-boolean="true">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Letzter Stellbefehl</span>
+    <strong data-field="control.reason">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Letzter Fehler</span>
+    <strong data-field="error_status">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>Gerätestatus</span>
+    <strong data-field="device_status">-</strong>
+  </article>
+  <article class="metric-card wide">
+    <span>Letzter Messwert</span>
+    <strong data-field="measurements.timestamp" data-date="true">-</strong>
+  </article>
+</section>
+{% endblock %}
+

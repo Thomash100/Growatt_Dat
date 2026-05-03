@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Growatt Local Gateway</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">Growatt Local Gateway</a>
+      <nav class="nav">
+        <a href="/">Dashboard</a>
+        <a href="/live">Live</a>
+        <a href="/settings">Einstellungen</a>
+        <a href="/logs">Logs</a>
+      </nav>
+    </header>
+    <main class="page">
+      {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}
+      <script src="/static/app.js"></script>
+    {% endblock %}
+  </body>
+</html>
+

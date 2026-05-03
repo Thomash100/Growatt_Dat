@@ -1,0 +1,32 @@
+services:
+  growatt-local-gateway:
+    build: .
+    container_name: growatt-local-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MQTT_HOST: ${MQTT_HOST:-localhost}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-growatt_local_gateway}
+      MQTT_DISCOVERY_PREFIX: ${MQTT_DISCOVERY_PREFIX:-homeassistant}
+      DATABASE_PATH: ${DATABASE_PATH:-/data/growatt_gateway.sqlite}
+      WEB_PORT: ${WEB_PORT:-8080}
+      ZERO_EXPORT_ENABLED: ${ZERO_EXPORT_ENABLED:-true}
+      TARGET_GRID_POWER_W: ${TARGET_GRID_POWER_W:-30}
+      GRID_POWER_BAND_MIN_W: ${GRID_POWER_BAND_MIN_W:-20}
+      GRID_POWER_BAND_MAX_W: ${GRID_POWER_BAND_MAX_W:-80}
+      CONTROL_INTERVAL_SECONDS: ${CONTROL_INTERVAL_SECONDS:-5}
+      MIN_OUTPUT_CHANGE_W: ${MIN_OUTPUT_CHANGE_W:-30}
+      OUTPUT_STEP_W: ${OUTPUT_STEP_W:-50}
+      MAX_OUTPUT_POWER_W: ${MAX_OUTPUT_POWER_W:-800}
+      MIN_OUTPUT_POWER_W: ${MIN_OUTPUT_POWER_W:-0}
+      MIN_SOC_PERCENT: ${MIN_SOC_PERCENT:-15}
+      STALE_MEASUREMENT_SECONDS: ${STALE_MEASUREMENT_SECONDS:-10}
+    ports:
+      - "${WEB_PORT:-8080}:${WEB_PORT:-8080}"
+    volumes:
+      - ./data:/data
+
