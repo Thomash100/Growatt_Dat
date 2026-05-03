@@ -43,6 +43,16 @@ def parse_int(value: Any, field_name: str) -> int:
         raise ValueError(f"Invalid integer value for {field_name}: {value!r}") from exc
 
 
+def parse_float(value: Any, field_name: str) -> float:
+    try:
+        parsed = float(str(value).strip())
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid float value for {field_name}: {value!r}") from exc
+    if not isfinite(parsed):
+        raise ValueError(f"Invalid float value for {field_name}: {value!r}")
+    return parsed
+
+
 @dataclass(slots=True)
 class Measurement:
     timestamp: datetime
@@ -69,6 +79,21 @@ class Measurement:
             charge_discharge_power_w=int(row["charge_discharge_power_w"]),
             device_status=str(row["device_status"]),
         )
+
+
+@dataclass(slots=True)
+class MeterReading:
+    timestamp: datetime
+    grid_power_w: int
+    status: str
+    source: str
+    phase_powers_w: dict[str, float]
+    error_status: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["timestamp"] = datetime_to_iso(self.timestamp)
+        return payload
 
 
 @dataclass(frozen=True, slots=True)

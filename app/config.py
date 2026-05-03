@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from app.models import ControlSettings, parse_bool, parse_int
+from app.models import ControlSettings, parse_float, parse_int
 
 
 def load_dotenv_file(path: str | Path = ".env") -> None:
@@ -32,6 +32,11 @@ class AppConfig:
     mqtt_discovery_prefix: str = "homeassistant"
     database_path: str = "/data/growatt_gateway.sqlite"
     web_port: int = 8080
+    meter_provider: str = "mock"
+    meter_power_sign: str = "normal"
+    shelly_3em_base_url: str | None = None
+    shelly_3em_generation: str = "auto"
+    shelly_3em_timeout_seconds: float = 3.0
     control: ControlSettings = ControlSettings()
 
     @classmethod
@@ -79,6 +84,14 @@ class AppConfig:
             mqtt_discovery_prefix=str(source.get("MQTT_DISCOVERY_PREFIX", "homeassistant")).strip("/"),
             database_path=str(source.get("DATABASE_PATH", "/data/growatt_gateway.sqlite")),
             web_port=parse_int(source.get("WEB_PORT", 8080), "WEB_PORT"),
+            meter_provider=str(source.get("METER_PROVIDER", "mock")).strip().lower(),
+            meter_power_sign=str(source.get("METER_POWER_SIGN", "normal")).strip().lower(),
+            shelly_3em_base_url=_empty_to_none(source.get("SHELLY_3EM_BASE_URL")),
+            shelly_3em_generation=str(source.get("SHELLY_3EM_GENERATION", "auto")).strip().lower(),
+            shelly_3em_timeout_seconds=parse_float(
+                source.get("SHELLY_3EM_TIMEOUT_SECONDS", 3.0),
+                "SHELLY_3EM_TIMEOUT_SECONDS",
+            ),
             control=control,
         )
         config.validate()
@@ -93,6 +106,16 @@ class AppConfig:
             raise ValueError("MQTT_TOPIC_PREFIX must not be empty")
         if not self.mqtt_discovery_prefix:
             raise ValueError("MQTT_DISCOVERY_PREFIX must not be empty")
+        if self.meter_provider not in {"mock", "shelly_3em"}:
+            raise ValueError("METER_PROVIDER must be 'mock' or 'shelly_3em'")
+        if self.meter_power_sign not in {"normal", "inverted"}:
+            raise ValueError("METER_POWER_SIGN must be 'normal' or 'inverted'")
+        if self.shelly_3em_generation not in {"auto", "gen1", "gen2"}:
+            raise ValueError("SHELLY_3EM_GENERATION must be 'auto', 'gen1', or 'gen2'")
+        if self.shelly_3em_timeout_seconds <= 0:
+            raise ValueError("SHELLY_3EM_TIMEOUT_SECONDS must be greater than 0")
+        if self.meter_provider == "shelly_3em" and not self.shelly_3em_base_url:
+            raise ValueError("SHELLY_3EM_BASE_URL is required when METER_PROVIDER=shelly_3em")
         self.control.validate()
 
 

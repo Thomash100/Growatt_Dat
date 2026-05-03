@@ -14,6 +14,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 - SQLite-Speicherung für Messwerte, Regelentscheidungen, Einstellungen und Logs.
 - Mock-Growatt-Gerät mit realistischen Schwankungen.
 - Abstraktes `GrowattDevice`-Interface für spätere Adapter.
+- Offene lokale Messgeräte-Schnittstelle mit Mock-Meter und Shelly-3EM-Adapter.
 - Zero-Export-Regelalgorithmus mit Safety-Checks und Fail-Safe.
 - MQTT-Publisher für Home Assistant und Mosquitto.
 - MQTT Auto Discovery unter `homeassistant/...`.
@@ -63,6 +64,11 @@ Wichtige Variablen:
 - `DATABASE_PATH`
 - `WEB_PORT`
 - `UI_LANGUAGE` (`de` oder `en`)
+- `METER_PROVIDER` (`mock` oder `shelly_3em`)
+- `METER_POWER_SIGN` (`normal` oder `inverted`)
+- `SHELLY_3EM_BASE_URL` (z. B. `http://192.168.1.100`)
+- `SHELLY_3EM_GENERATION` (`auto`, `gen1` oder `gen2`)
+- `SHELLY_3EM_TIMEOUT_SECONDS`
 - `ZERO_EXPORT_ENABLED`
 - `TARGET_GRID_POWER_W`
 - `GRID_POWER_BAND_MIN_W`
@@ -111,6 +117,8 @@ Lokale Endpunkte:
 - `/logs`
 - `/api/status`
 - `/api/settings`
+- `/api/meters`
+- `/api/meter/latest`
 - `/api/measurements/latest`
 - `/api/measurements/history`
 - `/api/control/latest`
@@ -126,6 +134,19 @@ Topic-Prefix: `growatt_local_gateway`
 - `growatt_local_gateway/settings`
 
 Payloads sind JSON.
+
+## Lokale Messgeräte
+
+Der Regler nutzt den lokalen Grid-Meter-Wert als `grid_power_w`. Standard ist `METER_PROVIDER=mock`. Für einen Shelly 3EM:
+
+```env
+METER_PROVIDER=shelly_3em
+SHELLY_3EM_BASE_URL=http://192.168.1.100
+SHELLY_3EM_GENERATION=auto
+METER_POWER_SIGN=normal
+```
+
+Wenn die Stromrichtung deiner Wandler invertiert ist, setze `METER_POWER_SIGN=inverted`. Shelly 3EM Gen1 wird über `/status` gelesen, Shelly Pro/Gen2 über `EM.GetStatus`; bei `auto` versucht der Adapter beides. Bei Meter-Fehlern setzt der Regler keine Leistungserhöhung.
 
 ## Home-Assistant-Integration
 
@@ -180,3 +201,4 @@ Der Regler erlaubt keine Leistungserhöhung bei ungültigen oder veralteten Mess
 - Optionaler Forwarder zur Growatt Cloud.
 - Gekapselter Command-Client für verifizierte lokale Stellbefehle.
 - Erweiterte Tests mit aufgezeichneten Protokollframes.
+- Weitere lokale Messgeräte-Adapter hinter `EnergyMeter`, z. B. Tasmota, Modbus, MQTT-Meter oder Home-Assistant-Sensoren.

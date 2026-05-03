@@ -113,6 +113,25 @@ async def api_latest_measurement(request: Request):
     return measurement.to_dict()
 
 
+@router.get("/api/meter/latest")
+async def api_latest_meter(request: Request):
+    meter_reading = _service(request).latest_meter_reading
+    if meter_reading is None:
+        raise HTTPException(status_code=404, detail="No meter reading available yet")
+    return meter_reading.to_dict()
+
+
+@router.get("/api/meters")
+async def api_meter_integrations(request: Request):
+    service = _service(request)
+    return {
+        "active_provider": service.config.meter_provider,
+        "available_providers": ["mock", "shelly_3em"],
+        "meter_power_sign": service.config.meter_power_sign,
+        "shelly_3em_generation": service.config.shelly_3em_generation,
+    }
+
+
 @router.get("/api/measurements/history")
 async def api_measurement_history(request: Request, limit: int = Query(default=200, ge=1, le=2000)):
     return [item.to_dict() for item in _service(request).store.get_measurement_history(limit=limit)]

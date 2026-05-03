@@ -27,6 +27,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "last_command": "Letzter Stellbefehl",
         "last_error": "Letzter Fehler",
         "device_status": "Geraetestatus",
+        "meter_source": "Messgeraet",
+        "meter_status": "Messgeraet-Status",
         "last_measurement": "Letzter Messwert",
         "live_title": "Live-Grafik",
         "live_subtitle": "WebSocket-Aktualisierung fuer Messwerte, Sollwerte und Regelabweichung.",
@@ -77,6 +79,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "last_command": "Last command",
         "last_error": "Last error",
         "device_status": "Device status",
+        "meter_source": "Grid meter",
+        "meter_status": "Meter status",
         "last_measurement": "Last measurement",
         "live_title": "Live charts",
         "live_subtitle": "WebSocket updates for measurements, targets, and control deviation.",
@@ -126,6 +130,7 @@ VALUE_TRANSLATIONS: dict[str, dict[str, dict[str, str]]] = {
             "missing_measurement": "Messwert fehlt",
             "device_error_status": "Geraet im Fehlerstatus",
             "unknown_device_status": "Geraetestatus unbekannt",
+            "meter_unavailable": "Messgeraet nicht verfuegbar",
         },
         "statuses": {
             "online": "online",
@@ -150,6 +155,7 @@ VALUE_TRANSLATIONS: dict[str, dict[str, dict[str, str]]] = {
             "missing_measurement": "missing measurement",
             "device_error_status": "device error status",
             "unknown_device_status": "unknown device status",
+            "meter_unavailable": "meter unavailable",
         },
         "statuses": {
             "online": "online",

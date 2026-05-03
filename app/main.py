@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,8 @@ from app.config import AppConfig
 from app.control.zero_export import ZeroExportController
 from app.growatt.mock_device import MockGrowattDevice
 from app.logging_config import configure_logging
-from app.models import ControlDecision, ControlSettings, Measurement, datetime_to_iso, utc_now
+from app.meters.factory import create_meter
+from app.models import ControlDecision, ControlSettings, Measurement, MeterReading, datetime_to_iso, utc_now
 from app.mqtt.publisher import MqttPublisher
 from app.storage.sqlite_store import SQLiteStore
 from app.web.routes import router
@@ -31,9 +33,11 @@ class GatewayService:
         self.store = store
         self.settings = settings
         self.device = MockGrowattDevice(max_output_power_w=settings.max_output_power_w)
+        self.meter = create_meter(config)
         self.controller = ZeroExportController()
         self.mqtt = MqttPublisher(config)
         self.latest_measurement: Measurement | None = None
+        self.latest_meter_reading: MeterReading | None = None
         self.latest_decision: ControlDecision | None = None
         self.error_status: str | None = None
         self.started_at = utc_now()
@@ -43,7 +47,11 @@ class GatewayService:
     async def start(self) -> None:
         self.mqtt.start()
         self.mqtt.publish_settings(self.settings)
-        self.store.add_log("INFO", "system", "Gateway service started with mock Growatt device")
+        self.store.add_log(
+            "INFO",
+            "system",
+            f"Gateway service started with {self.config.meter_provider} grid meter",
+        )
         self._task = asyncio.create_task(self._run_forever(), name="gateway-control-loop")
 
     async def stop(self) -> None:
@@ -68,6 +76,7 @@ class GatewayService:
         return {
             "timestamp": datetime_to_iso(utc_now()),
             "measurements": None if self.latest_measurement is None else self.latest_measurement.to_dict(),
+            "meter": None if self.latest_meter_reading is None else self.latest_meter_reading.to_dict(),
             "control": None if self.latest_decision is None else self.latest_decision.to_dict(),
             "settings": self.settings.to_dict(),
             "device_status": status_payload["device_status"],
@@ -95,11 +104,27 @@ class GatewayService:
             await asyncio.sleep(sleep_seconds)
 
     async def _run_cycle(self) -> None:
-        measurement = await self.device.poll()
+        device_measurement = await self.device.poll()
+        meter_reading = await self._read_meter()
+        measurement = replace(device_measurement, grid_power_w=meter_reading.grid_power_w)
         self.latest_measurement = measurement
+        self.latest_meter_reading = meter_reading
         self.store.save_measurement(measurement)
 
-        decision = self.controller.decide(measurement, self.settings)
+        if meter_reading.error_status:
+            decision = ControlDecision(
+                timestamp=utc_now(),
+                current_output_power_w=measurement.output_power_w,
+                target_output_power_w=measurement.output_power_w,
+                grid_power_w=measurement.grid_power_w,
+                battery_soc=measurement.battery_soc,
+                zero_export_enabled=self.settings.zero_export_enabled,
+                control_mode="zero_export",
+                reason="meter_unavailable",
+                error_status=meter_reading.error_status,
+            )
+        else:
+            decision = self.controller.decide(measurement, self.settings)
         await self.device.set_output_power(decision.target_output_power_w)
         self.latest_decision = decision
         self.store.save_control_decision(decision)
@@ -120,10 +145,29 @@ class GatewayService:
         return {
             "timestamp": datetime_to_iso(utc_now()),
             "device_status": "unknown" if self.latest_measurement is None else self.latest_measurement.device_status,
+            "meter_provider": self.config.meter_provider,
+            "meter_source": None if self.latest_meter_reading is None else self.latest_meter_reading.source,
+            "meter_status": "unknown" if self.latest_meter_reading is None else self.latest_meter_reading.status,
             "mqtt_connected": self.mqtt.connected,
             "error_status": self.error_status,
             "uptime_seconds": uptime_seconds,
         }
+
+    async def _read_meter(self) -> MeterReading:
+        try:
+            return await self.meter.get_latest_reading()
+        except Exception as exc:
+            LOGGER.exception("Grid meter read failed")
+            self.store.add_log("ERROR", "meter", f"Grid meter read failed: {exc}")
+            fallback_power = 0 if self.latest_measurement is None else self.latest_measurement.grid_power_w
+            return MeterReading(
+                timestamp=utc_now(),
+                grid_power_w=fallback_power,
+                status="error",
+                source=self.config.meter_provider,
+                phase_powers_w={},
+                error_status=str(exc),
+            )
 
 
 @asynccontextmanager
@@ -156,4 +200,3 @@ static_dir = Path(__file__).parent / "web" / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 app.include_router(router)
 register_websocket_routes(app)
-

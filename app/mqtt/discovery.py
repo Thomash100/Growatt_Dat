@@ -37,6 +37,8 @@ def build_discovery_payloads(
         ("last_command", "Letzter Stellbefehl", "control", "reason", None, None, None),
         ("last_error", "Letzter Fehler", "control", "error_status", None, None, None),
         ("device_status", "Gerätestatus", "status", "device_status", None, None, None),
+        ("meter_status", "Messgerät-Status", "status", "meter_status", None, None, None),
+        ("meter_source", "Messgerät-Quelle", "status", "meter_source", None, None, None),
     ]
 
     payloads: list[tuple[str, dict[str, Any]]] = []
@@ -73,4 +75,3 @@ def build_discovery_payloads(
     )
 
     return payloads
-

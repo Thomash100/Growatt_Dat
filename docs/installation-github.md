@@ -23,7 +23,16 @@ cp .env.example .env
 nano .env
 ```
 
-Trage dort MQTT-Broker, Ports, Sprache (`UI_LANGUAGE=de` oder `UI_LANGUAGE=en`) und Regelparameter ein. Es gehören keine echten Zugangsdaten in das Repository.
+Trage dort MQTT-Broker, Ports, Sprache (`UI_LANGUAGE=de` oder `UI_LANGUAGE=en`), lokale Messgeraete-Konfiguration und Regelparameter ein. Es gehören keine echten Zugangsdaten in das Repository.
+
+Shelly 3EM Beispiel:
+
+```env
+METER_PROVIDER=shelly_3em
+SHELLY_3EM_BASE_URL=http://192.168.1.100
+SHELLY_3EM_GENERATION=auto
+METER_POWER_SIGN=normal
+```
 
 ## Dienst starten
 
