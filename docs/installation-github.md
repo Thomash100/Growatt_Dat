@@ -64,7 +64,7 @@ Die Update-Seite ist erreichbar unter:
 http://raspberrypi.local:8080/update
 ```
 
-Sie prueft GitHub auf eine neuere Version und zeigt die passenden Raspberry-Pi-Updatebefehle an.
+Sie prueft GitHub auf eine neuere Version und zeigt die passenden Raspberry-Pi-Updatebefehle an. Ein optionaler Installationsbutton kann ueber `.env` mit `WEB_UPDATE_ENABLED=true` und einem langen `WEB_UPDATE_TOKEN` freigeschaltet werden.
 
 Die Integrationen-Seite mit lokalem Netzwerk-Scan ist erreichbar unter:
 

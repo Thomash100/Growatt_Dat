@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.7 - 2026-05-03
+
+- Optionalen Web-Update-Installationsbutton mit Token-Schutz ergaenzt.
+- API-Endpunkte `/api/update/install/status` und `/api/update/install` ergaenzt.
+- Kontrollierter Update-Runner fuer `git fetch`, `git pull --ff-only` und optional `docker compose up -d --build`.
+- Web-Update ist standardmaessig deaktiviert und muss ueber `.env` aktiviert werden.
+
 ## V0.001.6 - 2026-05-03
 
 - Integrationsliste sortiert IP-Adressen numerisch.

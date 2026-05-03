@@ -108,7 +108,11 @@ async def update_page(request: Request, force: bool = Query(default=False)):
     return templates.TemplateResponse(
         request,
         "update.html",
-        _template_context(request, update_status=update_status),
+        _template_context(
+            request,
+            update_status=update_status,
+            web_update_status=_service(request).web_update_status(),
+        ),
     )
 
 
@@ -120,6 +124,20 @@ async def api_status(request: Request):
 @router.get("/api/update/check")
 async def api_update_check(request: Request, force: bool = Query(default=False)):
     return await _service(request).check_updates(force=force)
+
+
+@router.get("/api/update/install/status")
+async def api_web_update_status(request: Request):
+    return _service(request).web_update_status()
+
+
+@router.post("/api/update/install")
+async def api_web_update_install(request: Request):
+    payload = await request.json()
+    try:
+        return await _service(request).start_web_update(payload.get("token"))
+    except ValueError as exc:
+        raise HTTPException(status_code=403 if str(exc) == "invalid_update_token" else 400, detail=str(exc)) from exc
 
 
 @router.get("/api/settings")

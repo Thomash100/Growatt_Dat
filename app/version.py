@@ -1,4 +1,4 @@
-VERSION = "0.001.6"
+VERSION = "0.001.7"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Integrationsliste erkennt doppelte Shelly-Eintraege anhand der Geraete-ID.",
-                    "Shelly 3EM Aktion ist jetzt klar als Netz-Messgeraet-Uebernahme beschriftet.",
-                    "Integrationen werden numerisch nach IP-Adresse sortiert.",
+                    "Optionaler Web-Update-Installationsbutton mit lokalem Token-Schutz.",
+                    "Neue API-Endpunkte fuer Web-Update-Status und Start.",
+                    "Web-Update fuehrt kontrolliert git fetch, git pull und optional docker compose aus.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Integrationsliste zeigt nun eine Status-Spalte.",
-                    "Duplikate werden als Duplikat der ersten gefundenen IP angezeigt.",
+                    "Web-Update ist standardmaessig deaktiviert und muss per .env freigeschaltet werden.",
+                    "Dockerfile enthaelt git fuer optionale Update-Pruefungen im Container.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Doppelte Shelly-Pro-3EM-IP-Adressen bieten keine zweite Uebernahme-Aktion mehr an.",
+                    "Token wird nicht im Frontend gespeichert und nach dem Start aus dem Eingabefeld entfernt.",
                 ],
             },
         ],
@@ -45,24 +45,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Integration list detects duplicate Shelly entries by device ID.",
-                    "Shelly 3EM action is now clearly labeled as grid-meter apply.",
-                    "Integrations are sorted numerically by IP address.",
+                    "Optional web update install button with local token protection.",
+                    "New API endpoints for web update status and start.",
+                    "Web update runs controlled git fetch, git pull, and optional docker compose steps.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Integration list now shows a status column.",
-                    "Duplicates are shown as duplicates of the first discovered IP.",
+                    "Web update is disabled by default and must be enabled through .env.",
+                    "Dockerfile includes git for optional update checks in the container.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Duplicate Shelly Pro 3EM IP addresses no longer offer a second apply action.",
+                    "Token is not stored in the frontend and is cleared from the input field after start.",
                 ],
             },
         ],

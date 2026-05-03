@@ -4,7 +4,7 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
-Aktuelle Version: `V0.001.6`
+Aktuelle Version: `V0.001.7`
 
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
@@ -76,6 +76,13 @@ Wichtige Variablen:
 - `UPDATE_CHECK_ENABLED`
 - `UPDATE_REPOSITORY`
 - `UPDATE_CHECK_TIMEOUT_SECONDS`
+- `WEB_UPDATE_ENABLED`
+- `WEB_UPDATE_TOKEN`
+- `WEB_UPDATE_WORKDIR`
+- `WEB_UPDATE_COMMAND_TIMEOUT_SECONDS`
+- `WEB_UPDATE_REQUIRE_CLEAN_TREE`
+- `WEB_UPDATE_RUN_DOCKER_COMPOSE`
+- `WEB_UPDATE_RESTART_AFTER_SUCCESS`
 - `INTEGRATION_SCAN_DEFAULT_CIDR`
 - `INTEGRATION_SCAN_TIMEOUT_SECONDS`
 - `INTEGRATION_SCAN_CONCURRENCY`
@@ -130,6 +137,8 @@ Lokale Endpunkte:
 - `/update`
 - `/api/status`
 - `/api/update/check`
+- `/api/update/install/status`
+- `/api/update/install`
 - `/api/integrations/scan`
 - `/api/integrations/apply`
 - `/api/settings`
@@ -202,12 +211,33 @@ Discovery-Topics werden unter `homeassistant/...` veröffentlicht. Enthalten sin
 
 Die normale Raspberry-Pi-Aktualisierung ueber `apt update` und `apt upgrade` aktualisiert Systempakete. Dieses GitHub-Projekt wird damit erst automatisch aktualisiert, wenn spaeter ein eigenes Debian-Paket oder ein APT-Repository bereitgestellt wird.
 
-Die Weboberflaeche bietet unter `/update` eine Versionspruefung gegen GitHub. Die Installation erfolgt in dieser Version bewusst ueber die Konsole, weil die Weboberflaeche noch keine Anmeldung hat und ein Button fuer Host-Befehle im Heimnetz sicherheitskritisch waere.
+Die Weboberflaeche bietet unter `/update` eine Versionspruefung gegen GitHub. Zusaetzlich gibt es einen optionalen Web-Update-Installationsbutton. Er ist standardmaessig deaktiviert und startet nur mit lokalem Token aus `.env`.
 
 ```bash
 cd growatt-local-gateway
 git pull
 docker compose up -d --build
+```
+
+Optionaler Web-Update-Button:
+
+```bash
+openssl rand -hex 24
+```
+
+```env
+WEB_UPDATE_ENABLED=true
+WEB_UPDATE_TOKEN=bitte-ein-langes-zufaelliges-token-setzen
+WEB_UPDATE_WORKDIR=/app
+WEB_UPDATE_REQUIRE_CLEAN_TREE=true
+WEB_UPDATE_RUN_DOCKER_COMPOSE=true
+WEB_UPDATE_RESTART_AFTER_SUCCESS=false
+```
+
+In Docker-Setups ist fuer echte Selbst-Updates zusaetzliche Vorbereitung noetig. Ohne Docker-Zugriff im Container zeigt die Weboberflaeche den Button als nicht bereit an. Fuer einen einfachen Git-Pull-Modus mit Neustart kann das optionale Override genutzt werden:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.web-update.yml up -d --build
 ```
 
 Optional:
@@ -221,6 +251,7 @@ docker image prune -f
 - Keine echten Growatt-Zugangsdaten in den Code schreiben.
 - Keine `.env` committen.
 - Keine Passwörter im Frontend anzeigen.
+- Web-Update nur mit langem lokalem Token aktivieren und nicht ins Internet freigeben.
 - Version 1 sendet keine realen Steuerbefehle an echte Geräte.
 - Spätere Hardwarebefehle müssen durch Safety-Prüfungen und klare Grenzwerte abgesichert werden.
 

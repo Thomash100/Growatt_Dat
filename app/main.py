@@ -22,6 +22,7 @@ from app.mqtt.publisher import MqttPublisher
 from app.storage.sqlite_store import SQLiteStore
 from app.update_checker import UpdateChecker
 from app.version import VERSION, VERSION_LABEL
+from app.web_update import WebUpdater, new_update_job
 from app.web.routes import router
 from app.web.websocket import register_websocket_routes
 
@@ -49,6 +50,7 @@ class GatewayService:
             concurrency=config.integration_scan_concurrency,
             max_hosts=config.integration_scan_max_hosts,
         )
+        self.web_updater = WebUpdater(config.web_update)
         self.latest_measurement: Measurement | None = None
         self.latest_meter_reading: MeterReading | None = None
         self.latest_decision: ControlDecision | None = None
@@ -57,6 +59,8 @@ class GatewayService:
         self._task: asyncio.Task[None] | None = None
         self._settings_lock = asyncio.Lock()
         self._update_cache: tuple[float, dict[str, Any]] | None = None
+        self._web_update_task: asyncio.Task[None] | None = None
+        self._web_update_job = None
 
     async def start(self) -> None:
         self.mqtt.start()
@@ -101,6 +105,29 @@ class GatewayService:
         if payload.get("update_available"):
             self.store.add_log("INFO", "system", f"Update available: {payload.get('latest_version_label')}")
         return payload
+
+    def web_update_status(self) -> dict[str, Any]:
+        return {
+            "availability": self.web_updater.availability(),
+            "running": self._web_update_task is not None and not self._web_update_task.done(),
+            "job": None if self._web_update_job is None else self._web_update_job.to_dict(),
+        }
+
+    async def start_web_update(self, token: str | None) -> dict[str, Any]:
+        if not self.web_updater.verify_token(token):
+            raise ValueError("invalid_update_token")
+        if self._web_update_task is not None and not self._web_update_task.done():
+            raise ValueError("web_update_already_running")
+
+        job = new_update_job()
+        self._web_update_job = job
+        self._web_update_task = asyncio.create_task(self._run_web_update_job(job), name="web-update")
+        self.store.add_log("INFO", "system", f"Web update started: {job.id}")
+        return self.web_update_status()
+
+    async def _run_web_update_job(self, job) -> None:
+        await self.web_updater.run(job)
+        self.store.add_log("INFO" if job.status == "succeeded" else "ERROR", "system", f"Web update {job.status}")
 
     async def scan_integrations(self, cidr: str | None = None) -> dict[str, Any]:
         scan_range = cidr or self.config.integration_scan_default_cidr

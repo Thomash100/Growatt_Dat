@@ -1,0 +1,10 @@
+services:
+  growatt-local-gateway:
+    environment:
+      WEB_UPDATE_ENABLED: ${WEB_UPDATE_ENABLED:-false}
+      WEB_UPDATE_TOKEN: ${WEB_UPDATE_TOKEN:-}
+      WEB_UPDATE_WORKDIR: /app
+      WEB_UPDATE_RUN_DOCKER_COMPOSE: ${WEB_UPDATE_RUN_DOCKER_COMPOSE:-false}
+      WEB_UPDATE_RESTART_AFTER_SUCCESS: ${WEB_UPDATE_RESTART_AFTER_SUCCESS:-true}
+    volumes:
+      - .:/app

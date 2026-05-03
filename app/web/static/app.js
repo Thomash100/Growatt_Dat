@@ -304,6 +304,73 @@ function setupIntegrationScan() {
   });
 }
 
+function setupWebUpdateInstall() {
+  const form = document.getElementById("webUpdateForm");
+  const tokenInput = document.getElementById("webUpdateToken");
+  const statusBox = document.getElementById("webUpdateStatus");
+  const logBox = document.getElementById("webUpdateLog");
+  if (!form || !tokenInput || !statusBox || !logBox) return;
+
+  function setWebUpdateStatus(message, important = false) {
+    statusBox.textContent = message;
+    statusBox.hidden = false;
+    statusBox.classList.toggle("important", important);
+  }
+
+  function renderWebUpdateJob(job) {
+    if (!job) return;
+    logBox.hidden = false;
+    logBox.textContent = job.steps.map((step) => {
+      const header = `[${step.name}] ${step.command} -> ${step.returncode ?? ""}`;
+      return `${header}\n${step.output || step.error_status || ""}`.trim();
+    }).join("\n\n");
+    if (job.status === "succeeded") {
+      setWebUpdateStatus(i18n.labels.webUpdateSucceeded || "Web update completed.");
+    } else if (job.status === "failed") {
+      setWebUpdateStatus(`${i18n.labels.webUpdateFailed || "Web update failed"}: ${job.error_status || ""}`, true);
+    } else {
+      setWebUpdateStatus(i18n.labels.webUpdateRunning || "Web update running...");
+    }
+  }
+
+  async function pollWebUpdateStatus() {
+    const response = await fetch("/api/update/install/status");
+    if (!response.ok) return;
+    const payload = await response.json();
+    renderWebUpdateJob(payload.job);
+    if (payload.running) {
+      window.setTimeout(pollWebUpdateStatus, 2500);
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = tokenInput.value;
+    tokenInput.value = "";
+    setWebUpdateStatus(i18n.labels.webUpdateRunning || "Web update running...");
+    logBox.hidden = true;
+    logBox.textContent = "";
+    try {
+      const response = await fetch("/api/update/install", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || response.statusText);
+      }
+      const payload = await response.json();
+      renderWebUpdateJob(payload.job);
+      window.setTimeout(pollWebUpdateStatus, 2500);
+    } catch (error) {
+      setWebUpdateStatus(`${i18n.labels.webUpdateFailed || "Web update failed"}: ${error.message}`, true);
+    }
+  });
+
+  pollWebUpdateStatus();
+}
+
 socket.addEventListener("message", (event) => {
   const payload = JSON.parse(event.data);
   updateFields(payload);
@@ -320,3 +387,4 @@ setupCharts();
 setupReleaseNotice();
 setupUpdateIndicator();
 setupIntegrationScan();
+setupWebUpdateInstall();

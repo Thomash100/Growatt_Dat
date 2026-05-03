@@ -25,6 +25,13 @@ def test_config_loads_from_environment_mapping():
             "INTEGRATION_SCAN_TIMEOUT_SECONDS": "0.8",
             "INTEGRATION_SCAN_CONCURRENCY": "16",
             "INTEGRATION_SCAN_MAX_HOSTS": "128",
+            "WEB_UPDATE_ENABLED": "true",
+            "WEB_UPDATE_TOKEN": "example-update-token-123",
+            "WEB_UPDATE_WORKDIR": "/srv/growatt",
+            "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS": "300",
+            "WEB_UPDATE_REQUIRE_CLEAN_TREE": "false",
+            "WEB_UPDATE_RUN_DOCKER_COMPOSE": "false",
+            "WEB_UPDATE_RESTART_AFTER_SUCCESS": "true",
             "ZERO_EXPORT_ENABLED": "false",
             "TARGET_GRID_POWER_W": "40",
             "GRID_POWER_BAND_MIN_W": "25",
@@ -57,6 +64,13 @@ def test_config_loads_from_environment_mapping():
     assert config.integration_scan_timeout_seconds == 0.8
     assert config.integration_scan_concurrency == 16
     assert config.integration_scan_max_hosts == 128
+    assert config.web_update.enabled is True
+    assert config.web_update.token == "example-update-token-123"
+    assert config.web_update.workdir == "/srv/growatt"
+    assert config.web_update.command_timeout_seconds == 300
+    assert config.web_update.require_clean_tree is False
+    assert config.web_update.run_docker_compose is False
+    assert config.web_update.restart_after_success is True
     assert config.control.ui_language == "en"
     assert config.control.zero_export_enabled is False
     assert config.control.target_grid_power_w == 40
@@ -83,3 +97,15 @@ def test_config_requires_shelly_base_url_for_shelly_provider():
         assert "shelly_3em_base_url" in str(exc)
     else:
         raise AssertionError("Expected missing Shelly base URL to raise ValueError")
+
+
+def test_config_requires_long_web_update_token_when_enabled():
+    try:
+        AppConfig.from_env(
+            {"WEB_UPDATE_ENABLED": "true", "WEB_UPDATE_TOKEN": "short"},
+            load_dotenv=False,
+    )
+    except ValueError as exc:
+        assert "WEB_UPDATE_TOKEN" in str(exc)
+    else:
+        raise AssertionError("Expected short web update token to raise ValueError")

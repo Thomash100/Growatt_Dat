@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Mapping
 
 from app.models import ControlSettings, parse_bool, parse_float, parse_int
+from app.web_update import WebUpdateSettings
 from app.version import PROJECT_REPOSITORY
 
 
@@ -45,6 +46,7 @@ class AppConfig:
     integration_scan_timeout_seconds: float = 0.6
     integration_scan_concurrency: int = 32
     integration_scan_max_hosts: int = 254
+    web_update: WebUpdateSettings = WebUpdateSettings()
     control: ControlSettings = ControlSettings()
 
     @classmethod
@@ -126,6 +128,20 @@ class AppConfig:
                 source.get("INTEGRATION_SCAN_MAX_HOSTS", 254),
                 "INTEGRATION_SCAN_MAX_HOSTS",
             ),
+            web_update=WebUpdateSettings.from_mapping(
+                {
+                    "WEB_UPDATE_ENABLED": source.get("WEB_UPDATE_ENABLED", "false"),
+                    "WEB_UPDATE_TOKEN": source.get("WEB_UPDATE_TOKEN", ""),
+                    "WEB_UPDATE_WORKDIR": source.get("WEB_UPDATE_WORKDIR", "/app"),
+                    "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS": source.get(
+                        "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS",
+                        "600",
+                    ),
+                    "WEB_UPDATE_REQUIRE_CLEAN_TREE": source.get("WEB_UPDATE_REQUIRE_CLEAN_TREE", "true"),
+                    "WEB_UPDATE_RUN_DOCKER_COMPOSE": source.get("WEB_UPDATE_RUN_DOCKER_COMPOSE", "true"),
+                    "WEB_UPDATE_RESTART_AFTER_SUCCESS": source.get("WEB_UPDATE_RESTART_AFTER_SUCCESS", "false"),
+                }
+            ),
             control=control,
         )
         config.validate()
@@ -162,6 +178,7 @@ class AppConfig:
             raise ValueError("INTEGRATION_SCAN_MAX_HOSTS must be between 1 and 512")
         if self.meter_provider == "shelly_3em" and not self.shelly_3em_base_url:
             raise ValueError("SHELLY_3EM_BASE_URL is required when METER_PROVIDER=shelly_3em")
+        self.web_update.validate()
         self.control.validate()
 
 

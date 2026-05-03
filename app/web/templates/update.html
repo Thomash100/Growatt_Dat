@@ -60,6 +60,36 @@ docker compose up -d --build</code></pre>
   <section class="update-panel">
     <h2>{{ t("web_install_title") }}</h2>
     <p>{{ t("web_install_text") }}</p>
+    <dl class="update-meta">
+      <div>
+        <dt>{{ t("web_update_enabled") }}</dt>
+        <dd>{{ t("active") if web_update_status.availability.enabled else t("inactive") }}</dd>
+      </div>
+      <div>
+        <dt>{{ t("web_update_available") }}</dt>
+        <dd>{{ t("active") if web_update_status.availability.available else t("inactive") }}</dd>
+      </div>
+      <div>
+        <dt>{{ t("web_update_workdir") }}</dt>
+        <dd>{{ web_update_status.availability.workdir }}</dd>
+      </div>
+    </dl>
+
+    {% if web_update_status.availability.reasons %}
+    <div class="notice">
+      {{ t("web_update_blocked") }}:
+      {{ web_update_status.availability.reasons | join(", ") }}
+    </div>
+    {% endif %}
+
+    <form class="web-update-form" id="webUpdateForm">
+      <label>{{ t("web_update_token") }}
+        <input type="password" id="webUpdateToken" autocomplete="off" placeholder="{{ t("web_update_token_placeholder") }}">
+      </label>
+      <button class="primary-button" type="submit" {% if not web_update_status.availability.available %}disabled{% endif %}>{{ t("web_update_start") }}</button>
+    </form>
+    <div class="notice" id="webUpdateStatus" hidden></div>
+    <pre class="changelog-block" id="webUpdateLog" hidden></pre>
   </section>
 
   {% if update_status.changelog %}
