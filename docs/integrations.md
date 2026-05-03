@@ -29,3 +29,7 @@ Shelly Gen1 wird ueber den REST-Endpunkt `/shelly` erkannt. Shelly Pro/Gen2 wird
 - `EM.GetStatus`
 
 Wenn ein Shelly 3EM erkannt wird, kann er in der Weboberflaeche als Messgeraet uebernommen werden. Dabei werden die lokalen Einstellungen aktualisiert und ohne Container-Neustart wirksam.
+
+## Duplikate
+
+Wenn dasselbe Shelly-Geraet ueber mehrere IP-Adressen gefunden wird, markiert der Scanner spaetere Treffer als Duplikat. Die erste numerisch sortierte IP-Adresse bleibt uebernehmbar, weitere Treffer zeigen `Duplikat von ...` und bieten keine zweite Uebernahme-Aktion an.

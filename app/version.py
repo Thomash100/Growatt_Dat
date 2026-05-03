@@ -1,4 +1,4 @@
-VERSION = "0.001.5"
+VERSION = "0.001.6"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Neue Integrationen-Seite mit lokalem Netzwerk-Scan.",
-                    "Shelly 3EM und Shelly Pro 3EM koennen automatisch erkannt werden.",
-                    "Gefundene Shelly-3EM-Geraete koennen direkt als Messgeraet uebernommen werden.",
+                    "Integrationsliste erkennt doppelte Shelly-Eintraege anhand der Geraete-ID.",
+                    "Shelly 3EM Aktion ist jetzt klar als Netz-Messgeraet-Uebernahme beschriftet.",
+                    "Integrationen werden numerisch nach IP-Adresse sortiert.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Scan-Bereich, Timeout, Parallelitaet und Host-Limit sind per .env konfigurierbar.",
-                    "Navigation um Integrationen erweitert.",
+                    "Integrationsliste zeigt nun eine Status-Spalte.",
+                    "Duplikate werden als Duplikat der ersten gefundenen IP angezeigt.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Netzwerk-Scan ist auf private IPv4-Heimnetze begrenzt.",
+                    "Doppelte Shelly-Pro-3EM-IP-Adressen bieten keine zweite Uebernahme-Aktion mehr an.",
                 ],
             },
         ],
@@ -45,24 +45,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "New integrations page with local network scanning.",
-                    "Shelly 3EM and Shelly Pro 3EM devices can be detected automatically.",
-                    "Detected Shelly 3EM devices can be applied directly as grid meters.",
+                    "Integration list detects duplicate Shelly entries by device ID.",
+                    "Shelly 3EM action is now clearly labeled as grid-meter apply.",
+                    "Integrations are sorted numerically by IP address.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Scan range, timeout, concurrency, and host limit are configurable through .env.",
-                    "Navigation now includes integrations.",
+                    "Integration list now shows a status column.",
+                    "Duplicates are shown as duplicates of the first discovered IP.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Network scanning is limited to private IPv4 home networks.",
+                    "Duplicate Shelly Pro 3EM IP addresses no longer offer a second apply action.",
                 ],
             },
         ],

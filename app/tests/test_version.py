@@ -2,8 +2,8 @@ from app.version import RELEASE_CHANNEL, VERSION, VERSION_LABEL
 
 
 def test_version_label_is_readable_release_name():
-    assert VERSION == "0.001.5"
-    assert VERSION_LABEL == "V0.001.5"
+    assert VERSION == "0.001.6"
+    assert VERSION_LABEL == "V0.001.6"
     assert RELEASE_CHANNEL == "stable"
 
 

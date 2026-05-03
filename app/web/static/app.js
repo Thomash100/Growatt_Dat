@@ -206,7 +206,7 @@ function setupIntegrationScan() {
     resultsBody.replaceChildren();
     const row = document.createElement("tr");
     const cell = document.createElement("td");
-    cell.colSpan = 6;
+    cell.colSpan = 7;
     cell.textContent = message;
     row.appendChild(cell);
     resultsBody.appendChild(row);
@@ -251,8 +251,14 @@ function setupIntegrationScan() {
       addCell(row, candidate.name);
       addCell(row, candidate.model);
       addCell(row, candidate.generation);
+      const statusText = candidate.duplicate_of
+        ? `${i18n.labels.duplicateIntegration || "Duplicate of"} ${candidate.duplicate_of}`
+        : (candidate.supported ? (i18n.labels.meterCandidate || "Grid meter") : candidate.status);
+      addCell(row, statusText);
       const actionCell = document.createElement("td");
-      if (candidate.supported) {
+      if (candidate.duplicate_of) {
+        actionCell.textContent = `${i18n.labels.duplicateIntegration || "Duplicate of"} ${candidate.duplicate_of}`;
+      } else if (candidate.supported) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "small-button";

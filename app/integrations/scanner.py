@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import ipaddress
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
 import httpx
@@ -30,6 +30,8 @@ class IntegrationCandidate:
     supported: bool
     suggested_settings: dict[str, Any]
     details: dict[str, Any]
+    unique_id: str | None = None
+    duplicate_of: str | None = None
     error_status: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -76,7 +78,8 @@ class IntegrationScanner:
                 if result is not None:
                     candidates.append(result)
 
-        candidates.sort(key=lambda candidate: candidate.ip_address)
+        candidates = mark_duplicate_candidates(candidates)
+        candidates.sort(key=lambda candidate: ipaddress.ip_address(candidate.ip_address))
         return IntegrationScanResult(
             cidr=str(ipaddress.ip_network(cidr, strict=False)),
             scanned_hosts=len(hosts),
@@ -143,6 +146,7 @@ async def probe_shelly_gen2(
     em_status = await post_rpc(client, base_url, "EM.GetStatus", {"id": 0})
     model = string_or_none(device_info.get("model"))
     device_id = string_or_none(device_info.get("id"))
+    mac = string_or_none(device_info.get("mac"))
     name = string_or_none(device_info.get("name")) or device_id or ip_address
     is_3em = has_3em_hint(model, device_id, name) or is_em_status(em_status)
 
@@ -162,6 +166,7 @@ async def probe_shelly_gen2(
             "device_info": compact_dict(device_info),
             "em_status": compact_dict(em_status) if isinstance(em_status, dict) else None,
         },
+        unique_id=shelly_unique_id(device_id, mac),
     )
 
 
@@ -184,8 +189,10 @@ async def probe_shelly_gen1(
         return None
 
     model = string_or_none(device_info.get("type")) or string_or_none(device_info.get("model"))
-    name = string_or_none(device_info.get("name")) or string_or_none(device_info.get("id")) or ip_address
-    is_3em = has_3em_hint(model, name, string_or_none(device_info.get("mac")))
+    device_id = string_or_none(device_info.get("id"))
+    mac = string_or_none(device_info.get("mac"))
+    name = string_or_none(device_info.get("name")) or device_id or ip_address
+    is_3em = has_3em_hint(model, name, mac)
 
     return IntegrationCandidate(
         ip_address=ip_address,
@@ -200,6 +207,7 @@ async def probe_shelly_gen1(
         supported=is_3em,
         suggested_settings=shelly_settings(base_url, "gen1") if is_3em else {},
         details={"device_info": compact_dict(device_info)},
+        unique_id=shelly_unique_id(device_id, mac),
     )
 
 
@@ -234,6 +242,38 @@ def shelly_settings(base_url: str, generation: str) -> dict[str, Any]:
         "shelly_3em_generation": generation,
         "meter_power_sign": "normal",
     }
+
+
+def mark_duplicate_candidates(candidates: list[IntegrationCandidate]) -> list[IntegrationCandidate]:
+    seen: dict[str, IntegrationCandidate] = {}
+    deduplicated: list[IntegrationCandidate] = []
+    for candidate in sorted(candidates, key=lambda item: ipaddress.ip_address(item.ip_address)):
+        if not candidate.unique_id:
+            deduplicated.append(candidate)
+            continue
+        if candidate.unique_id in seen:
+            first = seen[candidate.unique_id]
+            deduplicated.append(
+                replace(
+                    candidate,
+                    status="duplicate",
+                    supported=False,
+                    suggested_settings={},
+                    duplicate_of=first.ip_address,
+                )
+            )
+            continue
+        seen[candidate.unique_id] = candidate
+        deduplicated.append(candidate)
+    return deduplicated
+
+
+def shelly_unique_id(device_id: str | None, mac: str | None) -> str | None:
+    if device_id:
+        return f"shelly:{device_id.lower()}"
+    if mac:
+        return f"shelly-mac:{mac.replace(':', '').lower()}"
+    return None
 
 
 def has_3em_hint(*values: str | None) -> bool:

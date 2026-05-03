@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.6 - 2026-05-03
+
+- Integrationsliste sortiert IP-Adressen numerisch.
+- Doppelte Shelly-Eintraege werden anhand der Geraete-ID markiert.
+- Shelly-3EM-Uebernahme ist klarer als Netz-Messgeraet-Aktion beschriftet.
+- Status-Spalte fuer Integrationskandidaten ergaenzt.
+
 ## V0.001.5 - 2026-05-03
 
 - Integrationen-Seite `/integrations` mit lokalem Netzwerk-Scan ergaenzt.

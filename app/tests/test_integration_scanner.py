@@ -57,6 +57,7 @@ def test_scanner_detects_shelly_pro_3em_from_rpc():
     assert candidate.integration_type == "shelly_3em"
     assert candidate.generation == "gen2"
     assert candidate.supported is True
+    assert candidate.unique_id == "shelly:shellypro3em-fce8c0db18b4"
     assert candidate.suggested_settings["shelly_3em_base_url"] == "http://192.168.178.252"
 
 
@@ -76,3 +77,49 @@ def test_scanner_detects_shelly_3em_gen1_from_rest():
     assert len(result.candidates) == 1
     assert result.candidates[0].generation == "gen1"
     assert result.candidates[0].supported is True
+
+
+def test_scanner_marks_duplicate_shelly_ids_and_sorts_ips():
+    def handler(request: httpx.Request) -> httpx.Response:
+        host = request.url.host
+        if host not in {"192.168.178.50", "192.168.178.252", "192.168.178.253"}:
+            return httpx.Response(404)
+        if request.url.path != "/rpc":
+            return httpx.Response(404)
+        payload = json.loads(request.content.decode("utf-8"))
+        if payload["method"] == "Shelly.GetDeviceInfo":
+            if host in {"192.168.178.252", "192.168.178.253"}:
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "shellypro3em-fce8c0db18b4",
+                        "name": "Shelly Pro 3EM",
+                        "model": "SPEM-003CEBEU",
+                    },
+                )
+            return httpx.Response(
+                200,
+                json={
+                    "id": "shellypmmini-543204b8c290",
+                    "name": "Shelly PM Mini",
+                    "model": "SNPM-001PCEU16",
+                },
+            )
+        if payload["method"] == "EM.GetStatus":
+            return httpx.Response(200, json={"total_act_power": 42.0})
+        return httpx.Response(404)
+
+    transport = httpx.MockTransport(handler)
+    result = asyncio.run(
+        IntegrationScanner(transport=transport, timeout_seconds=0.1).scan("192.168.178.0/24")
+    )
+
+    assert [candidate.ip_address for candidate in result.candidates] == [
+        "192.168.178.50",
+        "192.168.178.252",
+        "192.168.178.253",
+    ]
+    assert result.candidates[1].supported is True
+    assert result.candidates[2].status == "duplicate"
+    assert result.candidates[2].supported is False
+    assert result.candidates[2].duplicate_of == "192.168.178.252"
