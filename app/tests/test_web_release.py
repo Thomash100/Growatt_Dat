@@ -13,5 +13,7 @@ def test_dashboard_renders_version_badge_and_release_popup(monkeypatch):
     assert response.status_code == 200
     assert VERSION_LABEL in response.text
     assert 'id="releaseModal"' in response.text
-    assert "Versionsnummer ist in der Weboberflaeche sichtbar." in response.text
-
+    assert "Neue Version verfuegbar" in response.text
+    assert "Release" in response.text
+    assert "stable" in response.text
+    assert "Changelog" in response.text

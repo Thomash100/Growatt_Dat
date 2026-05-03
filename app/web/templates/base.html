@@ -22,14 +22,36 @@
     <div class="release-backdrop" id="releaseModal" data-release-version="{{ version_label }}" hidden>
       <section class="release-modal" role="dialog" aria-modal="true" aria-labelledby="releaseTitle">
         <button class="release-close" type="button" data-release-close aria-label="{{ t("close") }}">x</button>
-        <p class="release-kicker">{{ version_label }}</p>
         <h2 id="releaseTitle">{{ release_notes.title }}</h2>
-        <p>{{ release_notes.summary }}</p>
-        <ul class="release-list">
-          {% for change in release_notes.changes %}
-          <li>{{ change }}</li>
+        <dl class="release-meta">
+          <div>
+            <dt>{{ t("version") }}</dt>
+            <dd>{{ version_label }}</dd>
+          </div>
+          <div>
+            <dt>{{ t("release") }}</dt>
+            <dd>{{ release_channel }}</dd>
+          </div>
+          <div>
+            <dt>{{ t("website") }}</dt>
+            <dd><a href="{{ project_website }}" target="_blank" rel="noreferrer">GitHub</a></dd>
+          </div>
+        </dl>
+        <h3>{{ release_notes.next_release_title }}</h3>
+        <p class="release-version-title">{{ version_label }}</p>
+        <h4>{{ release_notes.changelog_title }}</h4>
+        <div class="release-groups">
+          {% for group in release_notes.groups %}
+          <section class="release-group">
+            <h5>{{ group.title }} {{ group.icon }}</h5>
+            <ul class="release-list">
+              {% for change in group.changes %}
+              <li>{{ change }}</li>
+              {% endfor %}
+            </ul>
+          </section>
           {% endfor %}
-        </ul>
+        </div>
         <button class="primary-button" type="button" data-release-close>{{ t("release_ok") }}</button>
       </section>
     </div>

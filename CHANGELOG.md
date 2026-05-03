@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.001.3 - 2026-05-03
+
+- Release-Popup im klaren Versionslayout mit Version, Release-Kanal und Website umgesetzt.
+- Changelog im Popup nach Kategorien gruppiert.
+- Version bleibt als Badge in der Webnavigation sichtbar.
+
 ## V0.001.2 - 2026-05-03
 
 - Versionsnummer in der Weboberfläche sichtbar gemacht.
