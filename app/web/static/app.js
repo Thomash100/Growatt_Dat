@@ -180,12 +180,13 @@ function setupUpdateIndicator() {
       return response.json();
     })
     .then((payload) => {
-      if (payload.update_available) {
-        indicator.hidden = false;
-      }
+      const hasUpdate = Boolean(payload.update_available);
+      indicator.hidden = !hasUpdate;
+      indicator.setAttribute("aria-hidden", hasUpdate ? "false" : "true");
     })
     .catch(() => {
       indicator.hidden = true;
+      indicator.setAttribute("aria-hidden", "true");
     });
 }
 

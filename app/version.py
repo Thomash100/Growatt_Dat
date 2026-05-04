@@ -1,4 +1,4 @@
-VERSION = "0.001.7"
+VERSION = "0.001.8"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,22 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Optionaler Web-Update-Installationsbutton mit lokalem Token-Schutz.",
-                    "Neue API-Endpunkte fuer Web-Update-Status und Start.",
-                    "Web-Update fuehrt kontrolliert git fetch, git pull und optional docker compose aus.",
+                    "Update-Badge in der Navigation wird aktiv ausgeblendet, wenn keine neue Version verfuegbar ist.",
+                    "Badge bekommt einen klaren sichtbaren oder versteckten Zustand nach der Versionspruefung.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Web-Update ist standardmaessig deaktiviert und muss per .env freigeschaltet werden.",
-                    "Dockerfile enthaelt git fuer optionale Update-Pruefungen im Container.",
+                    "Release-Hinweis und Update-Seite bleiben unveraendert; nur der kurze Navigationshinweis reagiert genauer.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Token wird nicht im Frontend gespeichert und nach dem Start aus dem Eingabefeld entfernt.",
+                    "Alter neu-Hinweis kann nach einem Update-Check ohne neue Version nicht mehr sichtbar bleiben.",
                 ],
             },
         ],
@@ -45,24 +43,22 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Optional web update install button with local token protection.",
-                    "New API endpoints for web update status and start.",
-                    "Web update runs controlled git fetch, git pull, and optional docker compose steps.",
+                    "The update badge in the navigation is actively hidden when no newer version is available.",
+                    "The badge gets a clear visible or hidden state after the version check.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Web update is disabled by default and must be enabled through .env.",
-                    "Dockerfile includes git for optional update checks in the container.",
+                    "Release notice and update page stay unchanged; only the short navigation hint reacts more precisely.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Token is not stored in the frontend and is cleared from the input field after start.",
+                    "A stale new badge can no longer remain visible after an update check without a newer version.",
                 ],
             },
         ],

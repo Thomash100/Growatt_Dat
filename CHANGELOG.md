@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.001.8 - 2026-05-05
+
+- Update-Badge `neu` wird nach der Versionspruefung aktiv ausgeblendet, wenn keine neue Version verfuegbar ist.
+- Initialer Badge-Zustand ist jetzt auch fuer Screenreader eindeutig versteckt.
+- Verhindert, dass ein alter Navigationshinweis nach einem Update-Check sichtbar haengen bleibt.
+
 ## V0.001.7 - 2026-05-03
 
 - Optionalen Web-Update-Installationsbutton mit Token-Schutz ergaenzt.
