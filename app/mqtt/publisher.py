@@ -70,6 +70,9 @@ class MqttPublisher:
     def publish_state(self, payload: dict[str, Any]) -> None:
         self.publish_json("state", payload)
 
+    def publish_shelly_devices(self, payload: dict[str, Any]) -> None:
+        self.publish_json("shelly", payload)
+
     def publish_json(self, topic: str, payload: dict[str, Any], *, retain: bool = False, absolute_topic: bool = False) -> None:
         if self._client is None:
             return

@@ -239,6 +239,33 @@ function setupIntegrationScan() {
     setStatus(i18n.labels.integrationApplied || "Integration applied.");
   }
 
+  async function addCandidateAsShelly(candidate, button) {
+    button.disabled = true;
+    const suggested = (candidate.suggested_settings && candidate.suggested_settings.shelly_device) || {};
+    const response = await fetch("/api/shelly-devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: suggested.name || candidate.name || candidate.ip_address,
+        base_url: suggested.base_url || candidate.base_url,
+        generation: suggested.generation || candidate.generation || "auto",
+        model: suggested.model || candidate.model || "",
+        role: suggested.role || "pv",
+        power_sign: suggested.power_sign || "normal",
+        unique_id: suggested.unique_id || candidate.unique_id || "",
+        enabled: true
+      })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || response.statusText);
+    }
+    setStatus(i18n.labels.shellyDeviceAdded || "Shelly device added.");
+    if (window.loadShellyDevices) {
+      window.loadShellyDevices();
+    }
+  }
+
   function renderCandidates(candidates) {
     resultsBody.replaceChildren();
     if (!candidates.length) {
@@ -259,22 +286,44 @@ function setupIntegrationScan() {
       const actionCell = document.createElement("td");
       if (candidate.duplicate_of) {
         actionCell.textContent = `${i18n.labels.duplicateIntegration || "Duplicate of"} ${candidate.duplicate_of}`;
-      } else if (candidate.supported) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "small-button";
-        button.textContent = i18n.labels.applyIntegration || "Apply";
-        button.addEventListener("click", async () => {
-          try {
-            await applyCandidate(candidate, button);
-          } catch (error) {
-            button.disabled = false;
-            setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
-          }
-        });
-        actionCell.appendChild(button);
       } else {
-        actionCell.textContent = i18n.labels.unsupportedIntegration || "Not supported yet";
+        const actions = document.createElement("div");
+        actions.className = "action-stack";
+        if (candidate.supported) {
+          const gridButton = document.createElement("button");
+          gridButton.type = "button";
+          gridButton.className = "small-button";
+          gridButton.textContent = i18n.labels.applyIntegration || "Apply";
+          gridButton.addEventListener("click", async () => {
+            try {
+              await applyCandidate(candidate, gridButton);
+            } catch (error) {
+              gridButton.disabled = false;
+              setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+            }
+          });
+          actions.appendChild(gridButton);
+        }
+        if ((candidate.integration_type || "").startsWith("shelly")) {
+          const shellyButton = document.createElement("button");
+          shellyButton.type = "button";
+          shellyButton.className = "small-button secondary-button";
+          shellyButton.textContent = i18n.labels.addShellyDevice || "Add Shelly";
+          shellyButton.addEventListener("click", async () => {
+            try {
+              await addCandidateAsShelly(candidate, shellyButton);
+            } catch (error) {
+              shellyButton.disabled = false;
+              setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+            }
+          });
+          actions.appendChild(shellyButton);
+        }
+        if (!actions.children.length) {
+          actionCell.textContent = i18n.labels.unsupportedIntegration || "Not supported yet";
+        } else {
+          actionCell.appendChild(actions);
+        }
       }
       row.appendChild(actionCell);
       resultsBody.appendChild(row);
@@ -303,6 +352,226 @@ function setupIntegrationScan() {
       setStatus(`${i18n.labels.scanFailed || "Scan failed"}: ${error.message}`, true);
     }
   });
+}
+
+function setupShellyDevices() {
+  const form = document.getElementById("shellyDeviceForm");
+  const rows = document.getElementById("shellyDeviceRows");
+  const statusBox = document.getElementById("shellyDeviceStatus");
+  if (!form || !rows || !statusBox) return;
+
+  function setStatus(message, important = false) {
+    statusBox.textContent = message;
+    statusBox.hidden = false;
+    statusBox.classList.toggle("important", important);
+  }
+
+  function option(label, value, selected) {
+    const element = document.createElement("option");
+    element.value = value;
+    element.textContent = label;
+    element.selected = value === selected;
+    return element;
+  }
+
+  function addCell(row, child) {
+    const cell = document.createElement("td");
+    if (child instanceof Node) {
+      cell.appendChild(child);
+    } else {
+      cell.textContent = child || "-";
+    }
+    row.appendChild(cell);
+    return cell;
+  }
+
+  function makeInput(value) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = value || "";
+    return input;
+  }
+
+  function makeRoleSelect(value) {
+    const select = document.createElement("select");
+    select.appendChild(option(i18n.labels.shellyRolePv || "PV", "pv", value));
+    select.appendChild(option(i18n.labels.shellyRoleLoad || "Load", "load", value));
+    select.appendChild(option(i18n.labels.shellyRoleBattery || "Battery", "battery", value));
+    select.appendChild(option(i18n.labels.shellyRoleOther || "Other", "other", value));
+    return select;
+  }
+
+  function makeSignSelect(value) {
+    const select = document.createElement("select");
+    select.appendChild(option(i18n.labels.powerSignNormal || "Normal", "normal", value));
+    select.appendChild(option(i18n.labels.powerSignInverted || "Inverted", "inverted", value));
+    return select;
+  }
+
+  function makeGenerationSelect(value) {
+    const select = document.createElement("select");
+    select.appendChild(option(i18n.labels.shellyGenerationAuto || "Automatic", "auto", value));
+    select.appendChild(option(i18n.labels.shellyGenerationGen1 || "Gen1", "gen1", value));
+    select.appendChild(option(i18n.labels.shellyGenerationGen2 || "Gen2", "gen2", value));
+    return select;
+  }
+
+  function powerText(reading) {
+    if (!reading || reading.power_w === null || reading.power_w === undefined) return "-";
+    return `${reading.power_w} W`;
+  }
+
+  function statusText(device) {
+    const reading = device.reading;
+    if (!device.enabled) return i18n.labels.inactive || "inactive";
+    if (!reading) return "-";
+    if (reading.error_status) return reading.error_status;
+    return reading.status || "-";
+  }
+
+  function renderDevices(payload) {
+    const devices = payload.devices || [];
+    rows.replaceChildren();
+    if (!devices.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 8;
+      cell.textContent = i18n.labels.noShellyDevices || "No Shelly devices configured.";
+      row.appendChild(cell);
+      rows.appendChild(row);
+      return;
+    }
+    devices.forEach((device) => {
+      const row = document.createElement("tr");
+      const nameInput = makeInput(device.name);
+      const roleSelect = makeRoleSelect(device.role);
+      const generationSelect = makeGenerationSelect(device.generation);
+      const signSelect = makeSignSelect(device.power_sign);
+      const timeoutInput = document.createElement("input");
+      timeoutInput.type = "number";
+      timeoutInput.min = "0.2";
+      timeoutInput.step = "0.1";
+      timeoutInput.value = device.timeout_seconds || 3;
+      const enabledInput = document.createElement("input");
+      enabledInput.type = "checkbox";
+      enabledInput.checked = Boolean(device.enabled);
+
+      const parameterBox = document.createElement("div");
+      parameterBox.className = "inline-control-grid";
+      parameterBox.appendChild(generationSelect);
+      parameterBox.appendChild(signSelect);
+      parameterBox.appendChild(timeoutInput);
+      const enabledLabel = document.createElement("label");
+      enabledLabel.className = "inline-checkbox";
+      enabledLabel.appendChild(enabledInput);
+      enabledLabel.appendChild(document.createTextNode(i18n.labels.active || "active"));
+      parameterBox.appendChild(enabledLabel);
+
+      const actionBox = document.createElement("div");
+      actionBox.className = "action-stack";
+      const saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "small-button";
+      saveButton.textContent = i18n.labels.save || "Save";
+      saveButton.addEventListener("click", async () => {
+        saveButton.disabled = true;
+        try {
+          const response = await fetch(`/api/shelly-devices/${encodeURIComponent(device.id)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: nameInput.value,
+              base_url: device.base_url,
+              generation: generationSelect.value,
+              model: device.model || "",
+              role: roleSelect.value,
+              power_sign: signSelect.value,
+              timeout_seconds: timeoutInput.value,
+              enabled: enabledInput.checked
+            })
+          });
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || response.statusText);
+          }
+          setStatus(i18n.labels.shellyDeviceSaved || "Shelly device saved.");
+          await loadDevices();
+        } catch (error) {
+          setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "small-button danger-button";
+      deleteButton.textContent = i18n.labels.remove || "Remove";
+      deleteButton.addEventListener("click", async () => {
+        deleteButton.disabled = true;
+        try {
+          const response = await fetch(`/api/shelly-devices/${encodeURIComponent(device.id)}`, { method: "DELETE" });
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || response.statusText);
+          }
+          setStatus(i18n.labels.shellyDeviceRemoved || "Shelly device removed.");
+          await loadDevices();
+        } catch (error) {
+          setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+        } finally {
+          deleteButton.disabled = false;
+        }
+      });
+      actionBox.appendChild(saveButton);
+      actionBox.appendChild(deleteButton);
+
+      addCell(row, nameInput);
+      addCell(row, roleSelect);
+      addCell(row, device.base_url);
+      addCell(row, device.model || device.generation);
+      addCell(row, powerText(device.reading));
+      addCell(row, statusText(device));
+      addCell(row, parameterBox);
+      addCell(row, actionBox);
+      rows.appendChild(row);
+    });
+  }
+
+  async function loadDevices() {
+    const response = await fetch("/api/shelly-devices");
+    if (!response.ok) return;
+    renderDevices(await response.json());
+  }
+
+  window.loadShellyDevices = loadDevices;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+    payload.enabled = formData.get("enabled") === "true";
+    try {
+      const response = await fetch("/api/shelly-devices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || response.statusText);
+      }
+      form.reset();
+      form.elements.enabled.checked = true;
+      form.elements.timeout_seconds.value = "3";
+      setStatus(i18n.labels.shellyDeviceAdded || "Shelly device added.");
+      await loadDevices();
+    } catch (error) {
+      setStatus(`${i18n.labels.scanFailed || "Failed"}: ${error.message}`, true);
+    }
+  });
+
+  loadDevices();
+  window.setInterval(loadDevices, 5000);
 }
 
 function setupWebUpdateInstall() {
@@ -388,4 +657,5 @@ setupCharts();
 setupReleaseNotice();
 setupUpdateIndicator();
 setupIntegrationScan();
+setupShellyDevices();
 setupWebUpdateInstall();

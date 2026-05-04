@@ -232,6 +232,11 @@ select {
   font: inherit;
 }
 
+.compact-toggle {
+  align-self: end;
+  min-height: 42px;
+}
+
 .primary-button {
   justify-self: start;
   min-height: 42px;
@@ -280,6 +285,47 @@ td .small-button {
 .small-button:disabled {
   cursor: default;
   opacity: 0.55;
+}
+
+.secondary-button {
+  background: #475569;
+}
+
+.secondary-button:hover {
+  background: #334155;
+}
+
+.danger-button {
+  background: var(--danger);
+}
+
+.danger-button:hover {
+  background: #9f1239;
+}
+
+.action-stack {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.inline-control-grid {
+  display: grid;
+  min-width: 180px;
+  gap: 8px;
+}
+
+.inline-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.inline-checkbox input {
+  width: auto;
+  min-height: auto;
 }
 
 .primary-button.as-link {
@@ -433,11 +479,16 @@ td .small-button {
 }
 
 .web-update-form,
-.scan-form {
+.scan-form,
+.shelly-device-form {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto;
   gap: 14px;
   align-items: end;
+}
+
+.shelly-device-form {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .muted-small {
@@ -551,7 +602,8 @@ td {
   }
 
   .web-update-form,
-  .scan-form {
+  .scan-form,
+  .shelly-device-form {
     grid-template-columns: 1fr;
   }
 }

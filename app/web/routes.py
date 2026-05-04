@@ -185,6 +185,37 @@ async def api_meter_integrations(request: Request):
     }
 
 
+@router.get("/api/shelly-devices")
+async def api_shelly_devices(request: Request):
+    return _service(request).shelly_devices_payload()
+
+
+@router.post("/api/shelly-devices")
+async def api_add_shelly_device(request: Request):
+    payload = await request.json()
+    try:
+        return await _service(request).add_shelly_device(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/api/shelly-devices/{device_id}")
+async def api_update_shelly_device(request: Request, device_id: str):
+    payload = await request.json()
+    try:
+        return await _service(request).update_shelly_device(device_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=404 if str(exc) == "shelly_device_not_found" else 400, detail=str(exc)) from exc
+
+
+@router.delete("/api/shelly-devices/{device_id}")
+async def api_delete_shelly_device(request: Request, device_id: str):
+    try:
+        return await _service(request).delete_shelly_device(device_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404 if str(exc) == "shelly_device_not_found" else 400, detail=str(exc)) from exc
+
+
 @router.get("/api/integrations/scan")
 async def api_integration_scan(request: Request, cidr: str | None = Query(default=None)):
     try:

@@ -58,6 +58,14 @@
     <span>{{ t("meter_status") }}</span>
     <strong data-field="meter.status" data-value-map="statuses">-</strong>
   </article>
+  <article class="metric-card">
+    <span>{{ t("shelly_pv_power") }}</span>
+    <strong data-field="shelly_summary.pv_power_w" data-unit=" W">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>{{ t("shelly_devices_online") }}</span>
+    <strong data-field="shelly_summary.online_count">-</strong>
+  </article>
   <article class="metric-card wide">
     <span>{{ t("last_measurement") }}</span>
     <strong data-field="measurements.timestamp" data-date="true">-</strong>

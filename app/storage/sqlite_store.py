@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 import threading
+import json
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,8 @@ from app.models import (
     ControlDecision,
     ControlSettings,
     Measurement,
+    ShellyDeviceConfig,
+    ShellyDeviceReading,
     datetime_to_iso,
     parse_bool,
     utc_now,
@@ -78,6 +81,51 @@ class SQLiteStore:
 
                 CREATE INDEX IF NOT EXISTS idx_logs_timestamp
                 ON logs(timestamp);
+
+                CREATE TABLE IF NOT EXISTS shelly_devices (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    base_url TEXT NOT NULL UNIQUE,
+                    generation TEXT NOT NULL,
+                    model TEXT,
+                    role TEXT NOT NULL,
+                    power_sign TEXT NOT NULL,
+                    enabled TEXT NOT NULL,
+                    timeout_seconds REAL NOT NULL,
+                    unique_id TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_shelly_devices_role
+                ON shelly_devices(role);
+
+                CREATE TABLE IF NOT EXISTS shelly_device_readings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    device_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    base_url TEXT NOT NULL,
+                    generation TEXT NOT NULL,
+                    model TEXT,
+                    status TEXT NOT NULL,
+                    power_w REAL,
+                    energy_wh REAL,
+                    voltage_v REAL,
+                    current_a REAL,
+                    temperature_c REAL,
+                    relay_on TEXT,
+                    raw_json TEXT NOT NULL,
+                    error_status TEXT,
+                    FOREIGN KEY(device_id) REFERENCES shelly_devices(id) ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_shelly_readings_device_id
+                ON shelly_device_readings(device_id);
+
+                CREATE INDEX IF NOT EXISTS idx_shelly_readings_timestamp
+                ON shelly_device_readings(timestamp);
                 """
             )
 
@@ -187,6 +235,142 @@ class SQLiteStore:
         )
         return [dict(row) for row in rows]
 
+    def list_shelly_devices(self, *, enabled_only: bool = False) -> list[ShellyDeviceConfig]:
+        if enabled_only:
+            rows = self._fetch_all(
+                "SELECT * FROM shelly_devices WHERE enabled = 'true' ORDER BY role, name COLLATE NOCASE"
+            )
+        else:
+            rows = self._fetch_all("SELECT * FROM shelly_devices ORDER BY role, name COLLATE NOCASE")
+        return [ShellyDeviceConfig.from_row(row) for row in rows]
+
+    def get_shelly_device(self, device_id: str) -> ShellyDeviceConfig | None:
+        row = self._fetch_one("SELECT * FROM shelly_devices WHERE id = ?", (device_id,))
+        return None if row is None else ShellyDeviceConfig.from_row(row)
+
+    def save_shelly_device(self, device: ShellyDeviceConfig) -> ShellyDeviceConfig:
+        now = utc_now()
+        created_at = device.created_at or now
+        updated = ShellyDeviceConfig.from_mapping(
+            {
+                **device.to_dict(),
+                "base_url": device.base_url.rstrip("/"),
+                "created_at": datetime_to_iso(created_at),
+                "updated_at": datetime_to_iso(now),
+            }
+        )
+        try:
+            with self._lock, self._connection:
+                self._connection.execute(
+                    """
+                    INSERT INTO shelly_devices (
+                        id,
+                        name,
+                        base_url,
+                        generation,
+                        model,
+                        role,
+                        power_sign,
+                        enabled,
+                        timeout_seconds,
+                        unique_id,
+                        created_at,
+                        updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        name = excluded.name,
+                        base_url = excluded.base_url,
+                        generation = excluded.generation,
+                        model = excluded.model,
+                        role = excluded.role,
+                        power_sign = excluded.power_sign,
+                        enabled = excluded.enabled,
+                        timeout_seconds = excluded.timeout_seconds,
+                        unique_id = excluded.unique_id,
+                        updated_at = excluded.updated_at
+                    """,
+                    (
+                        updated.id,
+                        updated.name,
+                        updated.base_url,
+                        updated.generation,
+                        updated.model,
+                        updated.role,
+                        updated.power_sign,
+                        "true" if updated.enabled else "false",
+                        updated.timeout_seconds,
+                        updated.unique_id,
+                        datetime_to_iso(created_at),
+                        datetime_to_iso(now),
+                    ),
+                )
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("shelly_device_already_exists") from exc
+        return updated
+
+    def delete_shelly_device(self, device_id: str) -> bool:
+        with self._lock, self._connection:
+            cursor = self._connection.execute("DELETE FROM shelly_devices WHERE id = ?", (device_id,))
+            self._connection.execute("DELETE FROM shelly_device_readings WHERE device_id = ?", (device_id,))
+            return cursor.rowcount > 0
+
+    def save_shelly_reading(self, reading: ShellyDeviceReading) -> None:
+        with self._lock, self._connection:
+            self._connection.execute(
+                """
+                INSERT INTO shelly_device_readings (
+                    device_id,
+                    timestamp,
+                    name,
+                    role,
+                    base_url,
+                    generation,
+                    model,
+                    status,
+                    power_w,
+                    energy_wh,
+                    voltage_v,
+                    current_a,
+                    temperature_c,
+                    relay_on,
+                    raw_json,
+                    error_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    reading.device_id,
+                    datetime_to_iso(reading.timestamp),
+                    reading.name,
+                    reading.role,
+                    reading.base_url,
+                    reading.generation,
+                    reading.model,
+                    reading.status,
+                    reading.power_w,
+                    reading.energy_wh,
+                    reading.voltage_v,
+                    reading.current_a,
+                    reading.temperature_c,
+                    None if reading.relay_on is None else ("true" if reading.relay_on else "false"),
+                    json.dumps(reading.raw_values or {}, ensure_ascii=True, sort_keys=True),
+                    reading.error_status,
+                ),
+            )
+
+    def get_latest_shelly_readings(self) -> dict[str, ShellyDeviceReading]:
+        rows = self._fetch_all("SELECT * FROM shelly_device_readings ORDER BY id DESC")
+        readings: dict[str, ShellyDeviceReading] = {}
+        for row in rows:
+            device_id = str(row["device_id"])
+            if device_id in readings:
+                continue
+            try:
+                raw_values = json.loads(row["raw_json"] or "{}")
+            except json.JSONDecodeError:
+                raw_values = {}
+            readings[device_id] = ShellyDeviceReading.from_row(row, raw_values=raw_values)
+        return readings
+
     def _fetch_one(self, sql: str, parameters: tuple[Any, ...] = ()) -> sqlite3.Row | None:
         with self._lock:
             return self._connection.execute(sql, parameters).fetchone()
@@ -194,4 +378,3 @@ class SQLiteStore:
     def _fetch_all(self, sql: str, parameters: tuple[Any, ...] = ()) -> list[sqlite3.Row]:
         with self._lock:
             return list(self._connection.execute(sql, parameters).fetchall())
-

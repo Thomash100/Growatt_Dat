@@ -45,6 +45,7 @@ def test_integrations_page_renders(monkeypatch):
     assert response.status_code == 200
     assert VERSION_LABEL in response.text
     assert "Integrationen" in response.text
+    assert "Zusatz-Shellys" in response.text
     assert "192.168.178.0/24" in response.text
 
 

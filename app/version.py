@@ -1,4 +1,4 @@
-VERSION = "0.001.8"
+VERSION = "0.001.9"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,22 +14,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Update-Badge in der Navigation wird aktiv ausgeblendet, wenn keine neue Version verfuegbar ist.",
-                    "Badge bekommt einen klaren sichtbaren oder versteckten Zustand nach der Versionspruefung.",
+                    "Zusatz-Shellys koennen als lokale Datenquellen fuer PV, Verbraucher, Batterie oder Sonstiges angelegt werden.",
+                    "Generischer Shelly-Leser fuer Gen1/Gen2 liest Leistung, Energie, Spannung, Strom, Temperatur und Relaisstatus, soweit das Modell diese Werte bereitstellt.",
+                    "Integrations-Scan kann gefundene Shellys jetzt auch als Zusatz-Shelly uebernehmen.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Release-Hinweis und Update-Seite bleiben unveraendert; nur der kurze Navigationshinweis reagiert genauer.",
+                    "Dashboard, WebSocket und MQTT-State enthalten eine Shelly-Zusammenfassung inklusive lokaler PV-Leistung.",
+                    "SQLite speichert konfigurierte Zusatz-Shellys und deren letzte Messwerte.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Alter neu-Hinweis kann nach einem Update-Check ohne neue Version nicht mehr sichtbar bleiben.",
+                    "Nicht-3EM-Shellys sind nicht mehr nur als nicht direkt uebernehmbar sichtbar, sondern koennen als Datenquelle genutzt werden.",
                 ],
             },
         ],
@@ -43,22 +45,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "The update badge in the navigation is actively hidden when no newer version is available.",
-                    "The badge gets a clear visible or hidden state after the version check.",
+                    "Additional Shellys can be configured as local data sources for PV, loads, battery, or other readings.",
+                    "A generic Gen1/Gen2 Shelly reader collects power, energy, voltage, current, temperature, and relay status when the model exposes those values.",
+                    "The integration scan can now add discovered Shellys as additional Shelly sources.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Release notice and update page stay unchanged; only the short navigation hint reacts more precisely.",
+                    "Dashboard, WebSocket, and MQTT state include a Shelly summary with local PV power.",
+                    "SQLite stores configured additional Shellys and their latest readings.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "A stale new badge can no longer remain visible after an update check without a newer version.",
+                    "Non-3EM Shellys are no longer only shown as not directly applicable; they can be used as data sources.",
                 ],
             },
         ],

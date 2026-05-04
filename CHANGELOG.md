@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.9 - 2026-05-05
+
+- Zusatz-Shellys als lokale Datenquellen fuer PV, Verbraucher, Batterie oder Sonstiges ergaenzt.
+- Generischen Shelly-Reader fuer Gen1/Gen2 mit Leistung, Energie, Spannung, Strom, Temperatur, Relaisstatus und kompakten Rohwerten ergaenzt.
+- Integrationsseite um manuelles Hinzufuegen, Uebernahme aus dem Netzwerk-Scan und Bearbeiten der Shelly-Parameter erweitert.
+- Shelly-Zusammenfassung im Dashboard, WebSocket-Snapshot, MQTT-State und neuem MQTT-Topic `growatt_local_gateway/shelly` ergaenzt.
+
 ## V0.001.8 - 2026-05-05
 
 - Update-Badge `neu` wird nach der Versionspruefung aktiv ausgeblendet, wenn keine neue Version verfuegbar ist.

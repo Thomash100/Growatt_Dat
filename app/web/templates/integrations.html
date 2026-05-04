@@ -21,6 +21,70 @@
   <div class="notice" id="integrationScanStatus" hidden></div>
 </section>
 
+<section class="update-panel integration-scan-panel">
+  <h2>{{ t("additional_shelly_devices") }}</h2>
+  <p>{{ t("additional_shelly_devices_text") }}</p>
+  <form class="shelly-device-form" id="shellyDeviceForm">
+    <label>{{ t("name") }}
+      <input type="text" name="name" placeholder="PV Anlage">
+    </label>
+    <label>{{ t("shelly_address") }}
+      <input type="text" name="base_url" placeholder="http://192.168.178.50" required>
+    </label>
+    <label>{{ t("shelly_role") }}
+      <select name="role">
+        <option value="pv">{{ t("shelly_role_pv") }}</option>
+        <option value="load">{{ t("shelly_role_load") }}</option>
+        <option value="battery">{{ t("shelly_role_battery") }}</option>
+        <option value="other">{{ t("shelly_role_other") }}</option>
+      </select>
+    </label>
+    <label>{{ t("shelly_3em_generation") }}
+      <select name="generation">
+        <option value="auto">{{ t("shelly_generation_auto") }}</option>
+        <option value="gen1">{{ t("shelly_generation_gen1") }}</option>
+        <option value="gen2">{{ t("shelly_generation_gen2") }}</option>
+      </select>
+    </label>
+    <label>{{ t("meter_power_sign") }}
+      <select name="power_sign">
+        <option value="normal">{{ t("meter_power_sign_normal") }}</option>
+        <option value="inverted">{{ t("meter_power_sign_inverted") }}</option>
+      </select>
+    </label>
+    <label>{{ t("shelly_3em_timeout") }}
+      <input type="number" name="timeout_seconds" value="3" min="0.2" step="0.1">
+    </label>
+    <label class="toggle-row compact-toggle">
+      <input type="checkbox" name="enabled" value="true" checked>
+      <span>{{ t("active") }}</span>
+    </label>
+    <button class="primary-button" type="submit">{{ t("add_shelly_device") }}</button>
+  </form>
+  <div class="notice" id="shellyDeviceStatus" hidden></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t("name") }}</th>
+          <th>{{ t("shelly_role") }}</th>
+          <th>{{ t("shelly_address") }}</th>
+          <th>{{ t("model") }}</th>
+          <th>{{ t("power") }}</th>
+          <th>{{ t("status") }}</th>
+          <th>{{ t("parameters") }}</th>
+          <th>{{ t("action") }}</th>
+        </tr>
+      </thead>
+      <tbody id="shellyDeviceRows">
+        <tr>
+          <td colspan="8">{{ t("no_shelly_devices") }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <section class="update-panel">
   <h2>{{ t("found_integrations") }}</h2>
   <div class="table-wrap">

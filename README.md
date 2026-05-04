@@ -4,7 +4,7 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
-Aktuelle Version: `V0.001.8`
+Aktuelle Version: `V0.001.9`
 
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
@@ -18,6 +18,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 - Abstraktes `GrowattDevice`-Interface für spätere Adapter.
 - Offene lokale Messgeräte-Schnittstelle mit Mock-Meter und Shelly-3EM-Adapter.
 - Integrationen-Seite mit lokalem Netzwerk-Scan fuer Shelly 3EM / Shelly Pro 3EM.
+- Zusatz-Shellys als lokale Datenquellen fuer PV-Leistung, Verbraucher, Batterie oder sonstige Messwerte.
 - Zero-Export-Regelalgorithmus mit Safety-Checks und Fail-Safe.
 - MQTT-Publisher für Home Assistant und Mosquitto.
 - MQTT Auto Discovery unter `homeassistant/...`.
@@ -141,6 +142,7 @@ Lokale Endpunkte:
 - `/api/update/install`
 - `/api/integrations/scan`
 - `/api/integrations/apply`
+- `/api/shelly-devices`
 - `/api/settings`
 - `/api/meters`
 - `/api/meter/latest`
@@ -157,6 +159,7 @@ Topic-Prefix: `growatt_local_gateway`
 - `growatt_local_gateway/control`
 - `growatt_local_gateway/status`
 - `growatt_local_gateway/settings`
+- `growatt_local_gateway/shelly`
 
 Payloads sind JSON.
 
@@ -175,9 +178,11 @@ Diese Werte sind Startwerte aus `.env`; danach kannst du Messgeraet-Typ, Shelly-
 
 Wenn die Stromrichtung deiner Wandler invertiert ist, setze `METER_POWER_SIGN=inverted` oder waehle auf der Website `Invertiert`. Shelly 3EM Gen1 wird über `/status` gelesen, Shelly Pro/Gen2 über `EM.GetStatus`; bei `auto` versucht der Adapter beides. Bei Meter-Fehlern setzt der Regler keine Leistungserhöhung.
 
+Zusaetzliche Shellys koennen unter `/integrations` als lokale Datenquellen angelegt werden. Rollen sind `PV-Anlage`, `Verbraucher`, `Batterie` und `Sonstige`. Die App liest Gen1 und Gen2 allgemein aus und speichert verfuegbare Werte wie Leistung, Energie, Spannung, Strom, Temperatur, Relaisstatus und kompakte Rohdaten. Die PV-Summe erscheint im Dashboard als Shelly PV-Leistung und im MQTT-Topic `growatt_local_gateway/shelly`.
+
 ## Integrationen und Netzwerk-Scan
 
-Unter `/integrations` kann ein lokaler Scan im privaten Heimnetz gestartet werden, z. B. `192.168.178.0/24`. Der Scanner nutzt kurze HTTP-Abfragen fuer bekannte Integrationen und ist auf private IPv4-Netze begrenzt. Gefundene Shelly 3EM / Shelly Pro 3EM Geraete koennen direkt als Messgeraet uebernommen werden.
+Unter `/integrations` kann ein lokaler Scan im privaten Heimnetz gestartet werden, z. B. `192.168.178.0/24`. Der Scanner nutzt kurze HTTP-Abfragen fuer bekannte Integrationen und ist auf private IPv4-Netze begrenzt. Gefundene Shelly 3EM / Shelly Pro 3EM Geraete koennen direkt als Netz-Messgeraet uebernommen werden. Andere Shellys koennen als Zusatz-Shelly fuer lokale Daten uebernommen werden.
 
 Konfigurierbare Scan-Werte:
 
@@ -206,6 +211,8 @@ Discovery-Topics werden unter `homeassistant/...` veröffentlicht. Enthalten sin
 - Gerätestatus
 - letzter Stellbefehl
 - letzter Fehler
+- Shelly PV-Leistung
+- Shelly Gesamtleistung
 
 ## Update
 

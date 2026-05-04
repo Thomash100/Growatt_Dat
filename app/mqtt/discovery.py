@@ -39,6 +39,8 @@ def build_discovery_payloads(
         ("device_status", "Gerätestatus", "status", "device_status", None, None, None),
         ("meter_status", "Messgerät-Status", "status", "meter_status", None, None, None),
         ("meter_source", "Messgerät-Quelle", "status", "meter_source", None, None, None),
+        ("shelly_pv_power", "Shelly PV-Leistung", "shelly", "summary.pv_power_w", "W", "power", "measurement"),
+        ("shelly_total_power", "Shelly Gesamtleistung", "shelly", "summary.total_power_w", "W", "power", "measurement"),
     ]
 
     payloads: list[tuple[str, dict[str, Any]]] = []

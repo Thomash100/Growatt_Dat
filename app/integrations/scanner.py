@@ -144,6 +144,7 @@ async def probe_shelly_gen2(
         return None
 
     em_status = await post_rpc(client, base_url, "EM.GetStatus", {"id": 0})
+    shelly_status = await post_rpc(client, base_url, "Shelly.GetStatus")
     model = string_or_none(device_info.get("model"))
     device_id = string_or_none(device_info.get("id"))
     mac = string_or_none(device_info.get("mac"))
@@ -161,10 +162,14 @@ async def probe_shelly_gen2(
         confidence="high" if is_3em else "medium",
         source="shelly_rpc",
         supported=is_3em,
-        suggested_settings=shelly_settings(base_url, "gen2") if is_3em else {},
+        suggested_settings={
+            **(shelly_settings(base_url, "gen2") if is_3em else {}),
+            "shelly_device": shelly_device_settings(base_url, name, model, "gen2", shelly_unique_id(device_id, mac)),
+        },
         details={
             "device_info": compact_dict(device_info),
             "em_status": compact_dict(em_status) if isinstance(em_status, dict) else None,
+            "status_has_power": has_power_status(shelly_status),
         },
         unique_id=shelly_unique_id(device_id, mac),
     )
@@ -193,6 +198,7 @@ async def probe_shelly_gen1(
     mac = string_or_none(device_info.get("mac"))
     name = string_or_none(device_info.get("name")) or device_id or ip_address
     is_3em = has_3em_hint(model, name, mac)
+    status_payload = await get_json_or_none(client, f"{base_url}/status")
 
     return IntegrationCandidate(
         ip_address=ip_address,
@@ -205,8 +211,14 @@ async def probe_shelly_gen1(
         confidence="high" if is_3em else "medium",
         source="shelly_rest",
         supported=is_3em,
-        suggested_settings=shelly_settings(base_url, "gen1") if is_3em else {},
-        details={"device_info": compact_dict(device_info)},
+        suggested_settings={
+            **(shelly_settings(base_url, "gen1") if is_3em else {}),
+            "shelly_device": shelly_device_settings(base_url, name, model, "gen1", shelly_unique_id(device_id, mac)),
+        },
+        details={
+            "device_info": compact_dict(device_info),
+            "status_has_power": has_power_status(status_payload),
+        },
         unique_id=shelly_unique_id(device_id, mac),
     )
 
@@ -242,6 +254,37 @@ def shelly_settings(base_url: str, generation: str) -> dict[str, Any]:
         "shelly_3em_generation": generation,
         "meter_power_sign": "normal",
     }
+
+
+def shelly_device_settings(
+    base_url: str,
+    name: str,
+    model: str | None,
+    generation: str,
+    unique_id: str | None,
+) -> dict[str, Any]:
+    return {
+        "name": name,
+        "base_url": base_url,
+        "model": model,
+        "generation": generation,
+        "role": "pv",
+        "power_sign": "normal",
+        "unique_id": unique_id,
+    }
+
+
+async def get_json_or_none(client: httpx.AsyncClient, url: str) -> Any:
+    try:
+        response = await client.get(url)
+    except httpx.HTTPError:
+        return None
+    if response.status_code >= 400:
+        return None
+    try:
+        return response.json()
+    except ValueError:
+        return None
 
 
 def mark_duplicate_candidates(candidates: list[IntegrationCandidate]) -> list[IntegrationCandidate]:
@@ -292,6 +335,19 @@ def is_em_status(value: Any) -> bool:
             "c_act_power",
         )
     )
+
+
+def has_power_status(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    if any(key in value for key in ("total_act_power", "total_power", "apower", "act_power", "power")):
+        return True
+    for item in value.values():
+        if isinstance(item, dict) and has_power_status(item):
+            return True
+        if isinstance(item, list) and any(has_power_status(entry) for entry in item):
+            return True
+    return False
 
 
 def string_or_none(value: Any) -> str | None:

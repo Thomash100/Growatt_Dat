@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, fields
 from datetime import datetime, timezone
 from math import isfinite
 from typing import Any, Mapping
+from uuid import uuid4
 
 
 def utc_now() -> datetime:
@@ -53,6 +54,9 @@ def parse_float(value: Any, field_name: str) -> float:
     return parsed
 
 
+SHELLY_DEVICE_ROLES = {"pv", "load", "battery", "other"}
+
+
 @dataclass(slots=True)
 class Measurement:
     timestamp: datetime
@@ -94,6 +98,141 @@ class MeterReading:
         payload = asdict(self)
         payload["timestamp"] = datetime_to_iso(self.timestamp)
         return payload
+
+
+@dataclass(frozen=True, slots=True)
+class ShellyDeviceConfig:
+    id: str
+    name: str
+    base_url: str
+    generation: str = "auto"
+    model: str | None = None
+    role: str = "pv"
+    power_sign: str = "normal"
+    enabled: bool = True
+    timeout_seconds: float = 3.0
+    unique_id: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["created_at"] = None if self.created_at is None else datetime_to_iso(self.created_at)
+        payload["updated_at"] = None if self.updated_at is None else datetime_to_iso(self.updated_at)
+        return payload
+
+    @classmethod
+    def from_mapping(
+        cls,
+        values: Mapping[str, Any],
+        base: "ShellyDeviceConfig | None" = None,
+    ) -> "ShellyDeviceConfig":
+        current = asdict(base or cls(id=str(uuid4()), name="", base_url=""))
+        for field in fields(cls):
+            if field.name not in values:
+                continue
+            raw_value = values[field.name]
+            if field.name in {"enabled"}:
+                current[field.name] = parse_bool(raw_value)
+            elif field.name in {"timeout_seconds"}:
+                current[field.name] = parse_float(raw_value, field.name)
+            elif field.name in {"created_at", "updated_at"}:
+                if isinstance(raw_value, datetime):
+                    current[field.name] = raw_value
+                else:
+                    current[field.name] = None if raw_value in {None, ""} else datetime_from_iso(str(raw_value))
+            elif field.name in {"model", "unique_id"}:
+                text = "" if raw_value is None else str(raw_value).strip()
+                current[field.name] = text or None
+            elif field.name in {"generation", "role", "power_sign"}:
+                current[field.name] = str(raw_value).strip().lower()
+            else:
+                current[field.name] = str(raw_value).strip()
+        device = cls(**current)
+        device.validate()
+        return device
+
+    @classmethod
+    def from_row(cls, row: Mapping[str, Any]) -> "ShellyDeviceConfig":
+        return cls.from_mapping(
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "base_url": row["base_url"],
+                "generation": row["generation"],
+                "model": row["model"],
+                "role": row["role"],
+                "power_sign": row["power_sign"],
+                "enabled": row["enabled"],
+                "timeout_seconds": row["timeout_seconds"],
+                "unique_id": row["unique_id"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+            }
+        )
+
+    def validate(self) -> None:
+        if not self.id:
+            raise ValueError("Shelly device id must not be empty")
+        if not self.name:
+            raise ValueError("Shelly device name must not be empty")
+        if not self.base_url.startswith("http://"):
+            raise ValueError("Shelly base_url must start with http://")
+        if self.generation not in {"auto", "gen1", "gen2"}:
+            raise ValueError("Shelly generation must be auto, gen1, or gen2")
+        if self.role not in SHELLY_DEVICE_ROLES:
+            raise ValueError("Shelly role must be pv, load, battery, or other")
+        if self.power_sign not in {"normal", "inverted"}:
+            raise ValueError("Shelly power_sign must be normal or inverted")
+        if self.timeout_seconds <= 0:
+            raise ValueError("Shelly timeout_seconds must be greater than 0")
+
+
+@dataclass(slots=True)
+class ShellyDeviceReading:
+    timestamp: datetime
+    device_id: str
+    name: str
+    role: str
+    base_url: str
+    generation: str
+    model: str | None
+    status: str
+    power_w: float | None = None
+    energy_wh: float | None = None
+    voltage_v: float | None = None
+    current_a: float | None = None
+    temperature_c: float | None = None
+    relay_on: bool | None = None
+    raw_values: dict[str, Any] | None = None
+    error_status: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["timestamp"] = datetime_to_iso(self.timestamp)
+        payload["raw_values"] = self.raw_values or {}
+        return payload
+
+    @classmethod
+    def from_row(cls, row: Mapping[str, Any], raw_values: dict[str, Any] | None = None) -> "ShellyDeviceReading":
+        return cls(
+            timestamp=datetime_from_iso(row["timestamp"]),
+            device_id=str(row["device_id"]),
+            name=str(row["name"]),
+            role=str(row["role"]),
+            base_url=str(row["base_url"]),
+            generation=str(row["generation"]),
+            model=None if row["model"] is None else str(row["model"]),
+            status=str(row["status"]),
+            power_w=None if row["power_w"] is None else float(row["power_w"]),
+            energy_wh=None if row["energy_wh"] is None else float(row["energy_wh"]),
+            voltage_v=None if row["voltage_v"] is None else float(row["voltage_v"]),
+            current_a=None if row["current_a"] is None else float(row["current_a"]),
+            temperature_c=None if row["temperature_c"] is None else float(row["temperature_c"]),
+            relay_on=None if row["relay_on"] is None else parse_bool(row["relay_on"]),
+            raw_values=raw_values or {},
+            error_status=row["error_status"],
+        )
 
 
 @dataclass(frozen=True, slots=True)

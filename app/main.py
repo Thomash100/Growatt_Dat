@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+import uuid
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from pathlib import Path
@@ -17,7 +18,17 @@ from app.growatt.mock_device import MockGrowattDevice
 from app.integrations.scanner import IntegrationScanner
 from app.logging_config import configure_logging
 from app.meters.factory import create_meter
-from app.models import ControlDecision, ControlSettings, Measurement, MeterReading, datetime_to_iso, utc_now
+from app.meters.shelly_generic import ShellyGenericReader
+from app.models import (
+    ControlDecision,
+    ControlSettings,
+    Measurement,
+    MeterReading,
+    ShellyDeviceConfig,
+    ShellyDeviceReading,
+    datetime_to_iso,
+    utc_now,
+)
 from app.mqtt.publisher import MqttPublisher
 from app.storage.sqlite_store import SQLiteStore
 from app.update_checker import UpdateChecker
@@ -51,8 +62,10 @@ class GatewayService:
             max_hosts=config.integration_scan_max_hosts,
         )
         self.web_updater = WebUpdater(config.web_update)
+        self.shelly_reader = ShellyGenericReader()
         self.latest_measurement: Measurement | None = None
         self.latest_meter_reading: MeterReading | None = None
+        self.latest_shelly_readings: dict[str, ShellyDeviceReading] = store.get_latest_shelly_readings()
         self.latest_decision: ControlDecision | None = None
         self.error_status: str | None = None
         self.started_at = utc_now()
@@ -164,6 +177,40 @@ class GatewayService:
         self.store.add_log("INFO", "system", f"Integration applied: shelly_3em at {base_url}")
         return updated.to_dict()
 
+    async def add_shelly_device(self, payload: dict[str, Any]) -> dict[str, Any]:
+        prepared = self._prepare_shelly_device_payload(payload)
+        device = ShellyDeviceConfig.from_mapping(prepared)
+        saved = self.store.save_shelly_device(device)
+        self.store.add_log("INFO", "shelly", f"Shelly device added: {saved.name} at {saved.base_url}")
+        await self._read_shelly_device(saved)
+        return self.shelly_devices_payload()
+
+    async def update_shelly_device(self, device_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        current = self.store.get_shelly_device(device_id)
+        if current is None:
+            raise ValueError("shelly_device_not_found")
+        prepared = self._prepare_shelly_device_payload(payload, base=current)
+        updated = ShellyDeviceConfig.from_mapping(prepared, base=current)
+        saved = self.store.save_shelly_device(updated)
+        self.store.add_log("INFO", "shelly", f"Shelly device updated: {saved.name}")
+        if saved.enabled:
+            await self._read_shelly_device(saved)
+        return self.shelly_devices_payload()
+
+    async def delete_shelly_device(self, device_id: str) -> dict[str, Any]:
+        if not self.store.delete_shelly_device(device_id):
+            raise ValueError("shelly_device_not_found")
+        self.latest_shelly_readings.pop(device_id, None)
+        self.store.add_log("INFO", "shelly", f"Shelly device removed: {device_id}")
+        return self.shelly_devices_payload()
+
+    def shelly_devices_payload(self) -> dict[str, Any]:
+        devices = self.store.list_shelly_devices()
+        return {
+            "devices": [self._shelly_device_payload(device) for device in devices],
+            "summary": self._shelly_summary(devices),
+        }
+
     def snapshot(self) -> dict[str, Any]:
         status_payload = self._status_payload()
         return {
@@ -171,6 +218,8 @@ class GatewayService:
             "version": VERSION_LABEL,
             "measurements": None if self.latest_measurement is None else self.latest_measurement.to_dict(),
             "meter": None if self.latest_meter_reading is None else self.latest_meter_reading.to_dict(),
+            "shelly_devices": self.shelly_devices_payload()["devices"],
+            "shelly_summary": self.shelly_devices_payload()["summary"],
             "control": None if self.latest_decision is None else self.latest_decision.to_dict(),
             "settings": self.settings.to_dict(),
             "device_status": status_payload["device_status"],
@@ -200,6 +249,7 @@ class GatewayService:
     async def _run_cycle(self) -> None:
         device_measurement = await self.device.poll()
         meter_reading = await self._read_meter()
+        await self._read_shelly_devices()
         measurement = replace(device_measurement, grid_power_w=meter_reading.grid_power_w)
         self.latest_measurement = measurement
         self.latest_meter_reading = meter_reading
@@ -232,6 +282,7 @@ class GatewayService:
         self.mqtt.publish_control(decision)
         self.mqtt.publish_settings(self.settings)
         self.mqtt.publish_status(self._status_payload())
+        self.mqtt.publish_shelly_devices(self.shelly_devices_payload())
         self.mqtt.publish_state(self.snapshot())
 
     def _status_payload(self) -> dict[str, Any]:
@@ -243,6 +294,7 @@ class GatewayService:
             "meter_provider": self.settings.meter_provider,
             "meter_source": None if self.latest_meter_reading is None else self.latest_meter_reading.source,
             "meter_status": "unknown" if self.latest_meter_reading is None else self.latest_meter_reading.status,
+            "shelly_devices": self.shelly_devices_payload()["summary"],
             "mqtt_connected": self.mqtt.connected,
             "error_status": self.error_status,
             "uptime_seconds": uptime_seconds,
@@ -276,6 +328,91 @@ class GatewayService:
                 "shelly_3em_timeout_seconds",
             )
         )
+
+    async def _read_shelly_devices(self) -> None:
+        devices = self.store.list_shelly_devices(enabled_only=True)
+        if not devices:
+            return
+        await asyncio.gather(*(self._read_shelly_device(device) for device in devices))
+
+    async def _read_shelly_device(self, device: ShellyDeviceConfig) -> None:
+        try:
+            reading = await self.shelly_reader.read(device)
+        except Exception as exc:
+            reading = ShellyDeviceReading(
+                timestamp=utc_now(),
+                device_id=device.id,
+                name=device.name,
+                role=device.role,
+                base_url=device.base_url,
+                generation=device.generation,
+                model=device.model,
+                status="error",
+                raw_values={},
+                error_status=str(exc),
+            )
+            self.store.add_log("ERROR", "shelly", f"Shelly read failed for {device.name}: {exc}")
+        self.latest_shelly_readings[device.id] = reading
+        self.store.save_shelly_reading(reading)
+
+    def _shelly_device_payload(self, device: ShellyDeviceConfig) -> dict[str, Any]:
+        payload = device.to_dict()
+        reading = self.latest_shelly_readings.get(device.id)
+        payload["reading"] = None if reading is None else reading.to_dict()
+        return payload
+
+    def _shelly_summary(self, devices: list[ShellyDeviceConfig]) -> dict[str, Any]:
+        role_powers = {role: 0.0 for role in ("pv", "load", "battery", "other")}
+        online_count = 0
+        error_count = 0
+        enabled_count = 0
+        for device in devices:
+            if device.enabled:
+                enabled_count += 1
+            reading = self.latest_shelly_readings.get(device.id)
+            if reading is None:
+                continue
+            if reading.status == "online":
+                online_count += 1
+            if reading.error_status:
+                error_count += 1
+            if reading.power_w is not None and device.role in role_powers:
+                role_powers[device.role] += reading.power_w
+        return {
+            "configured_count": len(devices),
+            "enabled_count": enabled_count,
+            "online_count": online_count,
+            "error_count": error_count,
+            "pv_power_w": round(role_powers["pv"], 1),
+            "load_power_w": round(role_powers["load"], 1),
+            "battery_power_w": round(role_powers["battery"], 1),
+            "other_power_w": round(role_powers["other"], 1),
+            "total_power_w": round(sum(role_powers.values()), 1),
+        }
+
+    @staticmethod
+    def _prepare_shelly_device_payload(
+        payload: dict[str, Any],
+        *,
+        base: ShellyDeviceConfig | None = None,
+    ) -> dict[str, Any]:
+        base_url = str(payload.get("base_url", "" if base is None else base.base_url)).strip().rstrip("/")
+        name = str(payload.get("name", "" if base is None else base.name)).strip()
+        if not name and base_url:
+            name = base_url.removeprefix("http://")
+        return {
+            "id": payload.get("id") or (base.id if base else str(uuid.uuid4())),
+            "name": name,
+            "base_url": base_url,
+            "generation": payload.get("generation", base.generation if base else "auto"),
+            "model": payload.get("model", base.model if base else None),
+            "role": payload.get("role", base.role if base else "pv"),
+            "power_sign": payload.get("power_sign", base.power_sign if base else "normal"),
+            "enabled": payload.get("enabled", base.enabled if base else True),
+            "timeout_seconds": payload.get("timeout_seconds", base.timeout_seconds if base else 3.0),
+            "unique_id": payload.get("unique_id", base.unique_id if base else None),
+            "created_at": None if base is None else base.created_at,
+        }
 
 
 @asynccontextmanager
