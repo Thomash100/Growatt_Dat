@@ -235,6 +235,52 @@ class ShellyDeviceReading:
         )
 
 
+@dataclass(slots=True)
+class DailyEnergySummary:
+    date: str
+    updated_at: datetime
+    sample_count: int = 0
+    pv_energy_wh: float = 0.0
+    output_energy_wh: float = 0.0
+    grid_import_wh: float = 0.0
+    grid_export_wh: float = 0.0
+    battery_charge_wh: float = 0.0
+    battery_discharge_wh: float = 0.0
+    shelly_pv_energy_wh: float = 0.0
+    shelly_load_energy_wh: float = 0.0
+    shelly_battery_charge_wh: float = 0.0
+    shelly_battery_discharge_wh: float = 0.0
+    shelly_other_energy_wh: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["updated_at"] = datetime_to_iso(self.updated_at)
+        for key, value in list(payload.items()):
+            if key.endswith("_wh"):
+                payload[key] = round(float(value), 3)
+                payload[key.replace("_wh", "_kwh")] = round(float(value) / 1000.0, 3)
+        return payload
+
+    @classmethod
+    def from_row(cls, row: Mapping[str, Any]) -> "DailyEnergySummary":
+        return cls(
+            date=str(row["date"]),
+            updated_at=datetime_from_iso(row["updated_at"]),
+            sample_count=int(row["sample_count"]),
+            pv_energy_wh=float(row["pv_energy_wh"]),
+            output_energy_wh=float(row["output_energy_wh"]),
+            grid_import_wh=float(row["grid_import_wh"]),
+            grid_export_wh=float(row["grid_export_wh"]),
+            battery_charge_wh=float(row["battery_charge_wh"]),
+            battery_discharge_wh=float(row["battery_discharge_wh"]),
+            shelly_pv_energy_wh=float(row["shelly_pv_energy_wh"]),
+            shelly_load_energy_wh=float(row["shelly_load_energy_wh"]),
+            shelly_battery_charge_wh=float(row["shelly_battery_charge_wh"]),
+            shelly_battery_discharge_wh=float(row["shelly_battery_discharge_wh"]),
+            shelly_other_energy_wh=float(row["shelly_other_energy_wh"]),
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class ControlSettings:
     ui_language: str = "de"

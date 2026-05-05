@@ -23,12 +23,23 @@ openssl rand -hex 24
 ```env
 WEB_UPDATE_ENABLED=true
 WEB_UPDATE_TOKEN=bitte-ein-langes-zufaelliges-token-setzen
+WEB_UPDATE_TOKEN_REQUIRED=true
 WEB_UPDATE_WORKDIR=/app
 WEB_UPDATE_COMMAND_TIMEOUT_SECONDS=600
 WEB_UPDATE_REQUIRE_CLEAN_TREE=true
 WEB_UPDATE_RUN_DOCKER_COMPOSE=true
 WEB_UPDATE_RESTART_AFTER_SUCCESS=false
 ```
+
+Wenn der Dienst ausschliesslich im eigenen Heimnetz erreichbar ist, kann der Token bewusst abgeschaltet werden:
+
+```env
+WEB_UPDATE_ENABLED=true
+WEB_UPDATE_TOKEN_REQUIRED=false
+WEB_UPDATE_TOKEN=
+```
+
+Dann zeigt die Weboberflaeche kein Tokenfeld und der Installationsbutton startet direkt. Diese Einstellung nicht fuer eine aus dem Internet erreichbare Installation verwenden.
 
 Der Button fuehrt keine freie Shell-Eingabe aus. Der Ablauf ist fest verdrahtet:
 

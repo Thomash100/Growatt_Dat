@@ -12,6 +12,7 @@ def test_web_updater_reports_disabled_when_not_enabled(tmp_path):
     assert availability["available"] is False
     assert "web_update_disabled" in availability["reasons"]
     assert "token_not_configured" in availability["reasons"]
+    assert availability["token_required"] is True
 
 
 def test_web_updater_runs_git_pull_steps(tmp_path):
@@ -73,3 +74,23 @@ def test_web_updater_verifies_token():
     assert updater.verify_token("example-update-token-123") is True
     assert updater.verify_token("wrong-token") is False
     assert updater.verify_token(None) is False
+
+
+def test_web_updater_can_disable_token_requirement(tmp_path):
+    (tmp_path / ".git").mkdir()
+    updater = WebUpdater(
+        WebUpdateSettings(
+            enabled=True,
+            token=None,
+            token_required=False,
+            workdir=str(tmp_path),
+            run_docker_compose=False,
+        )
+    )
+
+    availability = updater.availability()
+
+    assert availability["available"] is True
+    assert availability["token_required"] is False
+    assert "token_not_configured" not in availability["reasons"]
+    assert updater.verify_token(None) is True

@@ -66,6 +66,14 @@
     <span>{{ t("shelly_devices_online") }}</span>
     <strong data-field="shelly_summary.online_count">-</strong>
   </article>
+  <article class="metric-card">
+    <span>{{ t("pv_energy_today") }}</span>
+    <strong data-field="daily_energy_today.pv_energy_kwh" data-unit=" kWh">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>{{ t("grid_import_today") }}</span>
+    <strong data-field="daily_energy_today.grid_import_kwh" data-unit=" kWh">-</strong>
+  </article>
   <article class="metric-card wide">
     <span>{{ t("last_measurement") }}</span>
     <strong data-field="measurements.timestamp" data-date="true">-</strong>

@@ -132,6 +132,7 @@ class AppConfig:
                 {
                     "WEB_UPDATE_ENABLED": source.get("WEB_UPDATE_ENABLED", "false"),
                     "WEB_UPDATE_TOKEN": source.get("WEB_UPDATE_TOKEN", ""),
+                    "WEB_UPDATE_TOKEN_REQUIRED": source.get("WEB_UPDATE_TOKEN_REQUIRED", "true"),
                     "WEB_UPDATE_WORKDIR": source.get("WEB_UPDATE_WORKDIR", "/app"),
                     "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS": source.get(
                         "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS",

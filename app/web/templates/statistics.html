@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h1>{{ t("statistics_title") }}</h1>
+    <p>{{ t("statistics_subtitle") }}</p>
+  </div>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <span>{{ t("pv_energy_today") }}</span>
+    <strong data-field="daily_energy_today.pv_energy_kwh" data-unit=" kWh">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>{{ t("grid_import_today") }}</span>
+    <strong data-field="daily_energy_today.grid_import_kwh" data-unit=" kWh">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>{{ t("grid_export_today") }}</span>
+    <strong data-field="daily_energy_today.grid_export_kwh" data-unit=" kWh">-</strong>
+  </article>
+  <article class="metric-card">
+    <span>{{ t("shelly_pv_energy_today") }}</span>
+    <strong data-field="daily_energy_today.shelly_pv_energy_kwh" data-unit=" kWh">-</strong>
+  </article>
+</section>
+
+<section class="update-panel">
+  <h2>{{ t("daily_history") }}</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t("date") }}</th>
+          <th>{{ t("pv_energy") }}</th>
+          <th>{{ t("output_energy") }}</th>
+          <th>{{ t("grid_import") }}</th>
+          <th>{{ t("grid_export") }}</th>
+          <th>{{ t("shelly_pv_energy") }}</th>
+          <th>{{ t("samples") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if daily_energy %}
+        {% for item in daily_energy|reverse %}
+        <tr>
+          <td>{{ item.date }}</td>
+          <td>{{ item.pv_energy_kwh }} kWh</td>
+          <td>{{ item.output_energy_kwh }} kWh</td>
+          <td>{{ item.grid_import_kwh }} kWh</td>
+          <td>{{ item.grid_export_kwh }} kWh</td>
+          <td>{{ item.shelly_pv_energy_kwh }} kWh</td>
+          <td>{{ item.sample_count }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="7">{{ t("no_statistics") }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

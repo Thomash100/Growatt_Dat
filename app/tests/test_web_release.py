@@ -35,6 +35,23 @@ def test_update_page_renders_without_network_when_disabled(monkeypatch):
     assert "Web-Update installieren" in response.text
 
 
+def test_update_page_hides_token_field_when_not_required(monkeypatch, tmp_path):
+    (tmp_path / ".git").mkdir()
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
+    monkeypatch.setenv("UPDATE_CHECK_ENABLED", "false")
+    monkeypatch.setenv("WEB_UPDATE_ENABLED", "true")
+    monkeypatch.setenv("WEB_UPDATE_TOKEN_REQUIRED", "false")
+    monkeypatch.setenv("WEB_UPDATE_WORKDIR", str(tmp_path))
+    monkeypatch.setenv("WEB_UPDATE_RUN_DOCKER_COMPOSE", "false")
+
+    with TestClient(app) as client:
+        response = client.get("/update")
+
+    assert response.status_code == 200
+    assert 'id="webUpdateToken"' not in response.text
+    assert "Token ist deaktiviert" in response.text
+
+
 def test_integrations_page_renders(monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", ":memory:")
     monkeypatch.setenv("UPDATE_CHECK_ENABLED", "false")
@@ -47,6 +64,19 @@ def test_integrations_page_renders(monkeypatch):
     assert "Integrationen" in response.text
     assert "Zusatz-Shellys" in response.text
     assert "192.168.178.0/24" in response.text
+
+
+def test_statistics_page_renders(monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
+    monkeypatch.setenv("UPDATE_CHECK_ENABLED", "false")
+
+    with TestClient(app) as client:
+        response = client.get("/statistics")
+
+    assert response.status_code == 200
+    assert VERSION_LABEL in response.text
+    assert "Langzeit" in response.text
+    assert "Tageswerte" in response.text
 
 
 def test_web_update_rejects_invalid_token(monkeypatch, tmp_path):

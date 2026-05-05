@@ -21,6 +21,7 @@ CommandRunner = Callable[[list[str], Path, float], "CommandResult"]
 class WebUpdateSettings:
     enabled: bool = False
     token: str | None = None
+    token_required: bool = True
     workdir: str = "/app"
     command_timeout_seconds: float = 600.0
     require_clean_tree: bool = True
@@ -32,6 +33,7 @@ class WebUpdateSettings:
         return cls(
             enabled=parse_bool(values.get("WEB_UPDATE_ENABLED", "false")),
             token=_empty_to_none(values.get("WEB_UPDATE_TOKEN")),
+            token_required=parse_bool(values.get("WEB_UPDATE_TOKEN_REQUIRED", "true")),
             workdir=str(values.get("WEB_UPDATE_WORKDIR", "/app")).strip() or "/app",
             command_timeout_seconds=float(values.get("WEB_UPDATE_COMMAND_TIMEOUT_SECONDS", 600.0)),
             require_clean_tree=parse_bool(values.get("WEB_UPDATE_REQUIRE_CLEAN_TREE", "true")),
@@ -40,7 +42,7 @@ class WebUpdateSettings:
         )
 
     def validate(self) -> None:
-        if self.enabled and (not self.token or len(self.token) < 16):
+        if self.enabled and self.token_required and (not self.token or len(self.token) < 16):
             raise ValueError("WEB_UPDATE_TOKEN must contain at least 16 characters when web update is enabled")
         if self.command_timeout_seconds <= 0:
             raise ValueError("WEB_UPDATE_COMMAND_TIMEOUT_SECONDS must be greater than 0")
@@ -119,7 +121,7 @@ class WebUpdater:
 
         if not self.settings.enabled:
             reasons.append("web_update_disabled")
-        if not self.settings.token_configured:
+        if self.settings.token_required and not self.settings.token_configured:
             reasons.append("token_not_configured")
         if not workdir.exists():
             reasons.append("workdir_missing")
@@ -135,12 +137,15 @@ class WebUpdater:
             "available": not reasons,
             "reasons": reasons,
             "workdir": str(workdir),
+            "token_required": self.settings.token_required,
             "run_docker_compose": self.settings.run_docker_compose,
             "restart_after_success": self.settings.restart_after_success,
             "docker_compose_command": docker_command,
         }
 
     def verify_token(self, token: str | None) -> bool:
+        if not self.settings.token_required:
+            return True
         expected = self.settings.token or ""
         provided = token or ""
         return bool(expected) and hmac.compare_digest(provided, expected)

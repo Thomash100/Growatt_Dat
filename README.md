@@ -4,7 +4,7 @@ Lokaler Growatt-Energy-Gateway-Dienst für einen Raspberry Pi. Das Projekt soll 
 
 ## Status: frühe Entwicklungs-/Mock-Version
 
-Aktuelle Version: `V0.001.9`
+Aktuelle Version: `V0.001.10`
 
 Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Growatt-Cloud-Anbindung und keine realen Steuerbefehle an echte Geräte. Alle Messwerte kommen aus einer Mock-Datenquelle.
 
@@ -19,6 +19,7 @@ Version 1 implementiert noch keine echte Growatt-Protokolldekodierung, keine Gro
 - Offene lokale Messgeräte-Schnittstelle mit Mock-Meter und Shelly-3EM-Adapter.
 - Integrationen-Seite mit lokalem Netzwerk-Scan fuer Shelly 3EM / Shelly Pro 3EM.
 - Zusatz-Shellys als lokale Datenquellen fuer PV-Leistung, Verbraucher, Batterie oder sonstige Messwerte.
+- Langzeit-Tagesstatistik fuer PV-Ertrag, Netzbezug, Einspeisung, Batterie und Shelly-Daten.
 - Zero-Export-Regelalgorithmus mit Safety-Checks und Fail-Safe.
 - MQTT-Publisher für Home Assistant und Mosquitto.
 - MQTT Auto Discovery unter `homeassistant/...`.
@@ -79,6 +80,7 @@ Wichtige Variablen:
 - `UPDATE_CHECK_TIMEOUT_SECONDS`
 - `WEB_UPDATE_ENABLED`
 - `WEB_UPDATE_TOKEN`
+- `WEB_UPDATE_TOKEN_REQUIRED`
 - `WEB_UPDATE_WORKDIR`
 - `WEB_UPDATE_COMMAND_TIMEOUT_SECONDS`
 - `WEB_UPDATE_REQUIRE_CLEAN_TREE`
@@ -132,6 +134,7 @@ Lokale Endpunkte:
 
 - `/`
 - `/live`
+- `/statistics`
 - `/settings`
 - `/integrations`
 - `/logs`
@@ -143,6 +146,7 @@ Lokale Endpunkte:
 - `/api/integrations/scan`
 - `/api/integrations/apply`
 - `/api/shelly-devices`
+- `/api/statistics/daily`
 - `/api/settings`
 - `/api/meters`
 - `/api/meter/latest`
@@ -160,8 +164,15 @@ Topic-Prefix: `growatt_local_gateway`
 - `growatt_local_gateway/status`
 - `growatt_local_gateway/settings`
 - `growatt_local_gateway/shelly`
+- `growatt_local_gateway/statistics`
 
 Payloads sind JSON.
+
+## Langzeitdaten
+
+Rohmesswerte bleiben in SQLite erhalten. Zusaetzlich schreibt der Dienst eine Tagesstatistik in die Tabelle `daily_energy`. Daraus entstehen lokale Langzeitwerte fuer PV-Ertrag, Ausgangsenergie, Netzbezug, Einspeisung, Batterie-Laden/-Entladen sowie Shelly-PV und weitere Shelly-Rollen.
+
+Die Werte sind unter `/statistics` sichtbar und per API unter `/api/statistics/daily` abrufbar. Fuer Home Assistant wird der aktuelle Tagesstand auch unter `growatt_local_gateway/statistics` veroeffentlicht.
 
 ## Lokale Messgeräte
 
@@ -235,11 +246,22 @@ openssl rand -hex 24
 ```env
 WEB_UPDATE_ENABLED=true
 WEB_UPDATE_TOKEN=bitte-ein-langes-zufaelliges-token-setzen
+WEB_UPDATE_TOKEN_REQUIRED=true
 WEB_UPDATE_WORKDIR=/app
 WEB_UPDATE_REQUIRE_CLEAN_TREE=true
 WEB_UPDATE_RUN_DOCKER_COMPOSE=true
 WEB_UPDATE_RESTART_AFTER_SUCCESS=false
 ```
+
+Wenn dir der Token im reinen Heimnetz zu unpraktisch ist, kannst du ihn bewusst deaktivieren:
+
+```env
+WEB_UPDATE_ENABLED=true
+WEB_UPDATE_TOKEN_REQUIRED=false
+WEB_UPDATE_TOKEN=
+```
+
+Dann blendet die Weboberflaeche das Tokenfeld aus und der Installationsbutton startet direkt. Das sollte nur im eigenen lokalen Netzwerk genutzt werden.
 
 In Docker-Setups ist fuer echte Selbst-Updates zusaetzliche Vorbereitung noetig. Ohne Docker-Zugriff im Container zeigt die Weboberflaeche den Button als nicht bereit an. Fuer einen einfachen Git-Pull-Modus mit Neustart kann das optionale Override genutzt werden:
 

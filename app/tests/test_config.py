@@ -27,6 +27,7 @@ def test_config_loads_from_environment_mapping():
             "INTEGRATION_SCAN_MAX_HOSTS": "128",
             "WEB_UPDATE_ENABLED": "true",
             "WEB_UPDATE_TOKEN": "example-update-token-123",
+            "WEB_UPDATE_TOKEN_REQUIRED": "false",
             "WEB_UPDATE_WORKDIR": "/srv/growatt",
             "WEB_UPDATE_COMMAND_TIMEOUT_SECONDS": "300",
             "WEB_UPDATE_REQUIRE_CLEAN_TREE": "false",
@@ -66,6 +67,7 @@ def test_config_loads_from_environment_mapping():
     assert config.integration_scan_max_hosts == 128
     assert config.web_update.enabled is True
     assert config.web_update.token == "example-update-token-123"
+    assert config.web_update.token_required is False
     assert config.web_update.workdir == "/srv/growatt"
     assert config.web_update.command_timeout_seconds == 300
     assert config.web_update.require_clean_tree is False
@@ -109,3 +111,18 @@ def test_config_requires_long_web_update_token_when_enabled():
         assert "WEB_UPDATE_TOKEN" in str(exc)
     else:
         raise AssertionError("Expected short web update token to raise ValueError")
+
+
+def test_config_allows_web_update_without_token_when_requirement_disabled():
+    config = AppConfig.from_env(
+        {
+            "WEB_UPDATE_ENABLED": "true",
+            "WEB_UPDATE_TOKEN_REQUIRED": "false",
+            "WEB_UPDATE_TOKEN": "",
+        },
+        load_dotenv=False,
+    )
+
+    assert config.web_update.enabled is True
+    assert config.web_update.token_required is False
+    assert config.web_update.token is None

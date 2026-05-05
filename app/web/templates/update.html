@@ -73,6 +73,10 @@ docker compose up -d --build</code></pre>
         <dt>{{ t("web_update_workdir") }}</dt>
         <dd>{{ web_update_status.availability.workdir }}</dd>
       </div>
+      <div>
+        <dt>{{ t("web_update_token_required") }}</dt>
+        <dd>{{ t("active") if web_update_status.availability.token_required else t("inactive") }}</dd>
+      </div>
     </dl>
 
     {% if web_update_status.availability.reasons %}
@@ -83,9 +87,13 @@ docker compose up -d --build</code></pre>
     {% endif %}
 
     <form class="web-update-form" id="webUpdateForm">
+      {% if web_update_status.availability.token_required %}
       <label>{{ t("web_update_token") }}
         <input type="password" id="webUpdateToken" autocomplete="off" placeholder="{{ t("web_update_token_placeholder") }}">
       </label>
+      {% else %}
+      <p class="notice">{{ t("web_update_without_token") }}</p>
+      {% endif %}
       <button class="primary-button" type="submit" {% if not web_update_status.availability.available %}disabled{% endif %}>{{ t("web_update_start") }}</button>
     </form>
     <div class="notice" id="webUpdateStatus" hidden></div>

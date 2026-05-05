@@ -1,4 +1,4 @@
-VERSION = "0.001.9"
+VERSION = "0.001.10"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Zusatz-Shellys koennen als lokale Datenquellen fuer PV, Verbraucher, Batterie oder Sonstiges angelegt werden.",
-                    "Generischer Shelly-Leser fuer Gen1/Gen2 liest Leistung, Energie, Spannung, Strom, Temperatur und Relaisstatus, soweit das Modell diese Werte bereitstellt.",
-                    "Integrations-Scan kann gefundene Shellys jetzt auch als Zusatz-Shelly uebernehmen.",
+                    "Langzeit-Tagesstatistik fuer PV-Ertrag, Netzbezug, Einspeisung, Batterie und Shelly-Datenquellen.",
+                    "Neue Langzeitseite unter /statistics und API unter /api/statistics/daily.",
+                    "Web-Update kann im eigenen Heimnetz optional ohne Tokenfeld genutzt werden.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Dashboard, WebSocket und MQTT-State enthalten eine Shelly-Zusammenfassung inklusive lokaler PV-Leistung.",
-                    "SQLite speichert konfigurierte Zusatz-Shellys und deren letzte Messwerte.",
+                    "MQTT veroeffentlicht aktuelle Tageswerte unter growatt_local_gateway/statistics.",
+                    "Dokumentation fuer tokenfreies Web-Update und Langzeitdaten erweitert.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Nicht-3EM-Shellys sind nicht mehr nur als nicht direkt uebernehmbar sichtbar, sondern koennen als Datenquelle genutzt werden.",
+                    "Update-Seite blendet das Tokenfeld aus, wenn WEB_UPDATE_TOKEN_REQUIRED=false gesetzt ist.",
                 ],
             },
         ],
@@ -45,24 +45,24 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Additional Shellys can be configured as local data sources for PV, loads, battery, or other readings.",
-                    "A generic Gen1/Gen2 Shelly reader collects power, energy, voltage, current, temperature, and relay status when the model exposes those values.",
-                    "The integration scan can now add discovered Shellys as additional Shelly sources.",
+                    "Long-term daily statistics for PV yield, grid import, grid export, battery, and Shelly data sources.",
+                    "New long-term page at /statistics and API at /api/statistics/daily.",
+                    "Web update can optionally be used without a token field on your own home network.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "Dashboard, WebSocket, and MQTT state include a Shelly summary with local PV power.",
-                    "SQLite stores configured additional Shellys and their latest readings.",
+                    "MQTT publishes current daily values at growatt_local_gateway/statistics.",
+                    "Documentation extended for token-free web updates and long-term data.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Non-3EM Shellys are no longer only shown as not directly applicable; they can be used as data sources.",
+                    "The update page hides the token field when WEB_UPDATE_TOKEN_REQUIRED=false is set.",
                 ],
             },
         ],

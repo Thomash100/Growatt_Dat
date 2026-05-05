@@ -41,6 +41,10 @@ def build_discovery_payloads(
         ("meter_source", "Messgerät-Quelle", "status", "meter_source", None, None, None),
         ("shelly_pv_power", "Shelly PV-Leistung", "shelly", "summary.pv_power_w", "W", "power", "measurement"),
         ("shelly_total_power", "Shelly Gesamtleistung", "shelly", "summary.total_power_w", "W", "power", "measurement"),
+        ("pv_energy_today", "PV-Ertrag heute", "statistics", "daily_energy_today.pv_energy_kwh", "kWh", "energy", "total_increasing"),
+        ("grid_import_today", "Netzbezug heute", "statistics", "daily_energy_today.grid_import_kwh", "kWh", "energy", "total_increasing"),
+        ("grid_export_today", "Einspeisung heute", "statistics", "daily_energy_today.grid_export_kwh", "kWh", "energy", "total_increasing"),
+        ("shelly_pv_energy_today", "Shelly PV heute", "statistics", "daily_energy_today.shelly_pv_energy_kwh", "kWh", "energy", "total_increasing"),
     ]
 
     payloads: list[tuple[str, dict[str, Any]]] = []

@@ -579,7 +579,7 @@ function setupWebUpdateInstall() {
   const tokenInput = document.getElementById("webUpdateToken");
   const statusBox = document.getElementById("webUpdateStatus");
   const logBox = document.getElementById("webUpdateLog");
-  if (!form || !tokenInput || !statusBox || !logBox) return;
+  if (!form || !statusBox || !logBox) return;
 
   function setWebUpdateStatus(message, important = false) {
     statusBox.textContent = message;
@@ -615,8 +615,8 @@ function setupWebUpdateInstall() {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const token = tokenInput.value;
-    tokenInput.value = "";
+    const token = tokenInput ? tokenInput.value : "";
+    if (tokenInput) tokenInput.value = "";
     setWebUpdateStatus(i18n.labels.webUpdateRunning || "Web update running...");
     logBox.hidden = true;
     logBox.textContent = "";

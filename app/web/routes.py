@@ -54,6 +54,16 @@ async def live(request: Request):
     )
 
 
+@router.get("/statistics", response_class=HTMLResponse)
+async def statistics_page(request: Request):
+    rows = _service(request).store.get_daily_energy_history(limit=365)
+    return templates.TemplateResponse(
+        request,
+        "statistics.html",
+        _template_context(request, daily_energy=[row.to_dict() for row in rows]),
+    )
+
+
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     return templates.TemplateResponse(
@@ -119,6 +129,11 @@ async def update_page(request: Request, force: bool = Query(default=False)):
 @router.get("/api/status")
 async def api_status(request: Request):
     return _service(request).snapshot()
+
+
+@router.get("/api/statistics/daily")
+async def api_daily_statistics(request: Request, limit: int = Query(default=365, ge=1, le=3660)):
+    return [item.to_dict() for item in _service(request).store.get_daily_energy_history(limit=limit)]
 
 
 @router.get("/api/update/check")

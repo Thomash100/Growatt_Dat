@@ -9,6 +9,7 @@ from typing import Any
 from app.models import (
     ControlDecision,
     ControlSettings,
+    DailyEnergySummary,
     Measurement,
     ShellyDeviceConfig,
     ShellyDeviceReading,
@@ -126,6 +127,26 @@ class SQLiteStore:
 
                 CREATE INDEX IF NOT EXISTS idx_shelly_readings_timestamp
                 ON shelly_device_readings(timestamp);
+
+                CREATE TABLE IF NOT EXISTS daily_energy (
+                    date TEXT PRIMARY KEY,
+                    updated_at TEXT NOT NULL,
+                    sample_count INTEGER NOT NULL DEFAULT 0,
+                    pv_energy_wh REAL NOT NULL DEFAULT 0,
+                    output_energy_wh REAL NOT NULL DEFAULT 0,
+                    grid_import_wh REAL NOT NULL DEFAULT 0,
+                    grid_export_wh REAL NOT NULL DEFAULT 0,
+                    battery_charge_wh REAL NOT NULL DEFAULT 0,
+                    battery_discharge_wh REAL NOT NULL DEFAULT 0,
+                    shelly_pv_energy_wh REAL NOT NULL DEFAULT 0,
+                    shelly_load_energy_wh REAL NOT NULL DEFAULT 0,
+                    shelly_battery_charge_wh REAL NOT NULL DEFAULT 0,
+                    shelly_battery_discharge_wh REAL NOT NULL DEFAULT 0,
+                    shelly_other_energy_wh REAL NOT NULL DEFAULT 0
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_daily_energy_updated_at
+                ON daily_energy(updated_at);
                 """
             )
 
@@ -370,6 +391,89 @@ class SQLiteStore:
                 raw_values = {}
             readings[device_id] = ShellyDeviceReading.from_row(row, raw_values=raw_values)
         return readings
+
+    def add_daily_energy(
+        self,
+        date_key: str,
+        *,
+        pv_energy_wh: float = 0.0,
+        output_energy_wh: float = 0.0,
+        grid_import_wh: float = 0.0,
+        grid_export_wh: float = 0.0,
+        battery_charge_wh: float = 0.0,
+        battery_discharge_wh: float = 0.0,
+        shelly_pv_energy_wh: float = 0.0,
+        shelly_load_energy_wh: float = 0.0,
+        shelly_battery_charge_wh: float = 0.0,
+        shelly_battery_discharge_wh: float = 0.0,
+        shelly_other_energy_wh: float = 0.0,
+    ) -> DailyEnergySummary:
+        updated_at = datetime_to_iso(utc_now())
+        with self._lock, self._connection:
+            self._connection.execute(
+                """
+                INSERT INTO daily_energy (
+                    date,
+                    updated_at,
+                    sample_count,
+                    pv_energy_wh,
+                    output_energy_wh,
+                    grid_import_wh,
+                    grid_export_wh,
+                    battery_charge_wh,
+                    battery_discharge_wh,
+                    shelly_pv_energy_wh,
+                    shelly_load_energy_wh,
+                    shelly_battery_charge_wh,
+                    shelly_battery_discharge_wh,
+                    shelly_other_energy_wh
+                ) VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(date) DO UPDATE SET
+                    updated_at = excluded.updated_at,
+                    sample_count = daily_energy.sample_count + 1,
+                    pv_energy_wh = daily_energy.pv_energy_wh + excluded.pv_energy_wh,
+                    output_energy_wh = daily_energy.output_energy_wh + excluded.output_energy_wh,
+                    grid_import_wh = daily_energy.grid_import_wh + excluded.grid_import_wh,
+                    grid_export_wh = daily_energy.grid_export_wh + excluded.grid_export_wh,
+                    battery_charge_wh = daily_energy.battery_charge_wh + excluded.battery_charge_wh,
+                    battery_discharge_wh = daily_energy.battery_discharge_wh + excluded.battery_discharge_wh,
+                    shelly_pv_energy_wh = daily_energy.shelly_pv_energy_wh + excluded.shelly_pv_energy_wh,
+                    shelly_load_energy_wh = daily_energy.shelly_load_energy_wh + excluded.shelly_load_energy_wh,
+                    shelly_battery_charge_wh = daily_energy.shelly_battery_charge_wh + excluded.shelly_battery_charge_wh,
+                    shelly_battery_discharge_wh = daily_energy.shelly_battery_discharge_wh + excluded.shelly_battery_discharge_wh,
+                    shelly_other_energy_wh = daily_energy.shelly_other_energy_wh + excluded.shelly_other_energy_wh
+                """,
+                (
+                    date_key,
+                    updated_at,
+                    pv_energy_wh,
+                    output_energy_wh,
+                    grid_import_wh,
+                    grid_export_wh,
+                    battery_charge_wh,
+                    battery_discharge_wh,
+                    shelly_pv_energy_wh,
+                    shelly_load_energy_wh,
+                    shelly_battery_charge_wh,
+                    shelly_battery_discharge_wh,
+                    shelly_other_energy_wh,
+                ),
+            )
+        summary = self.get_daily_energy(date_key)
+        if summary is None:
+            raise RuntimeError("daily energy row was not stored")
+        return summary
+
+    def get_daily_energy(self, date_key: str) -> DailyEnergySummary | None:
+        row = self._fetch_one("SELECT * FROM daily_energy WHERE date = ?", (date_key,))
+        return None if row is None else DailyEnergySummary.from_row(row)
+
+    def get_daily_energy_history(self, limit: int = 365) -> list[DailyEnergySummary]:
+        rows = self._fetch_all(
+            "SELECT * FROM daily_energy ORDER BY date DESC LIMIT ?",
+            (max(1, min(limit, 3660)),),
+        )
+        return [DailyEnergySummary.from_row(row) for row in reversed(rows)]
 
     def _fetch_one(self, sql: str, parameters: tuple[Any, ...] = ()) -> sqlite3.Row | None:
         with self._lock:

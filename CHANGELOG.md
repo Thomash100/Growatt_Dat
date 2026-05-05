@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.001.10 - 2026-05-05
+
+- Langzeit-Tagesstatistik fuer PV-Ertrag, Ausgangsenergie, Netzbezug, Einspeisung, Batterie und Shelly-Datenquellen ergaenzt.
+- Neue Langzeitseite `/statistics`, API `/api/statistics/daily` und MQTT-Topic `growatt_local_gateway/statistics` ergaenzt.
+- Web-Update kann optional mit `WEB_UPDATE_TOKEN_REQUIRED=false` ohne Tokenfeld gestartet werden.
+- README und Update-Dokumentation fuer tokenfreies Heimnetz-Update und Langzeitdaten erweitert.
+
 ## V0.001.9 - 2026-05-05
 
 - Zusatz-Shellys als lokale Datenquellen fuer PV, Verbraucher, Batterie oder Sonstiges ergaenzt.

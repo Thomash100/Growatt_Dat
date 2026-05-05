@@ -22,6 +22,7 @@ from app.meters.shelly_generic import ShellyGenericReader
 from app.models import (
     ControlDecision,
     ControlSettings,
+    DailyEnergySummary,
     Measurement,
     MeterReading,
     ShellyDeviceConfig,
@@ -66,6 +67,7 @@ class GatewayService:
         self.latest_measurement: Measurement | None = None
         self.latest_meter_reading: MeterReading | None = None
         self.latest_shelly_readings: dict[str, ShellyDeviceReading] = store.get_latest_shelly_readings()
+        self.latest_daily_energy: DailyEnergySummary | None = store.get_daily_energy(utc_now().astimezone().date().isoformat())
         self.latest_decision: ControlDecision | None = None
         self.error_status: str | None = None
         self.started_at = utc_now()
@@ -74,6 +76,8 @@ class GatewayService:
         self._update_cache: tuple[float, dict[str, Any]] | None = None
         self._web_update_task: asyncio.Task[None] | None = None
         self._web_update_job = None
+        self._previous_energy_measurement: Measurement | None = None
+        self._previous_shelly_summary: dict[str, Any] | None = None
 
     async def start(self) -> None:
         self.mqtt.start()
@@ -220,6 +224,7 @@ class GatewayService:
             "meter": None if self.latest_meter_reading is None else self.latest_meter_reading.to_dict(),
             "shelly_devices": self.shelly_devices_payload()["devices"],
             "shelly_summary": self.shelly_devices_payload()["summary"],
+            "daily_energy_today": None if self.latest_daily_energy is None else self.latest_daily_energy.to_dict(),
             "control": None if self.latest_decision is None else self.latest_decision.to_dict(),
             "settings": self.settings.to_dict(),
             "device_status": status_payload["device_status"],
@@ -254,6 +259,7 @@ class GatewayService:
         self.latest_measurement = measurement
         self.latest_meter_reading = meter_reading
         self.store.save_measurement(measurement)
+        self._update_daily_energy(measurement)
 
         if meter_reading.error_status:
             decision = ControlDecision(
@@ -283,6 +289,8 @@ class GatewayService:
         self.mqtt.publish_settings(self.settings)
         self.mqtt.publish_status(self._status_payload())
         self.mqtt.publish_shelly_devices(self.shelly_devices_payload())
+        if self.latest_daily_energy is not None:
+            self.mqtt.publish_statistics({"daily_energy_today": self.latest_daily_energy.to_dict()})
         self.mqtt.publish_state(self.snapshot())
 
     def _status_payload(self) -> dict[str, Any]:
@@ -295,6 +303,7 @@ class GatewayService:
             "meter_source": None if self.latest_meter_reading is None else self.latest_meter_reading.source,
             "meter_status": "unknown" if self.latest_meter_reading is None else self.latest_meter_reading.status,
             "shelly_devices": self.shelly_devices_payload()["summary"],
+            "daily_energy_today": None if self.latest_daily_energy is None else self.latest_daily_energy.to_dict(),
             "mqtt_connected": self.mqtt.connected,
             "error_status": self.error_status,
             "uptime_seconds": uptime_seconds,
@@ -390,6 +399,70 @@ class GatewayService:
             "total_power_w": round(sum(role_powers.values()), 1),
         }
 
+    def _update_daily_energy(self, measurement: Measurement) -> None:
+        current_summary = self.shelly_devices_payload()["summary"]
+        if self._previous_energy_measurement is None:
+            self._previous_energy_measurement = measurement
+            self._previous_shelly_summary = current_summary
+            self.latest_daily_energy = self.store.get_daily_energy(measurement.timestamp.astimezone().date().isoformat())
+            return
+
+        previous = self._previous_energy_measurement
+        elapsed_seconds = (measurement.timestamp - previous.timestamp).total_seconds()
+        max_gap_seconds = max(60.0, float(self.settings.control_interval_seconds) * 3.0)
+        if elapsed_seconds <= 0 or elapsed_seconds > max_gap_seconds:
+            self._previous_energy_measurement = measurement
+            self._previous_shelly_summary = current_summary
+            self.latest_daily_energy = self.store.get_daily_energy(measurement.timestamp.astimezone().date().isoformat())
+            return
+
+        hours = elapsed_seconds / 3600.0
+        previous_summary = self._previous_shelly_summary or {}
+        self.latest_daily_energy = self.store.add_daily_energy(
+            measurement.timestamp.astimezone().date().isoformat(),
+            pv_energy_wh=average_positive(previous.pv_power_w, measurement.pv_power_w) * hours,
+            output_energy_wh=average_positive(previous.output_power_w, measurement.output_power_w) * hours,
+            grid_import_wh=average_positive(previous.grid_power_w, measurement.grid_power_w) * hours,
+            grid_export_wh=average_positive(-previous.grid_power_w, -measurement.grid_power_w) * hours,
+            battery_charge_wh=average_positive(
+                previous.charge_discharge_power_w,
+                measurement.charge_discharge_power_w,
+            )
+            * hours,
+            battery_discharge_wh=average_positive(
+                -previous.charge_discharge_power_w,
+                -measurement.charge_discharge_power_w,
+            )
+            * hours,
+            shelly_pv_energy_wh=average_positive(
+                float(previous_summary.get("pv_power_w", 0.0)),
+                float(current_summary.get("pv_power_w", 0.0)),
+            )
+            * hours,
+            shelly_load_energy_wh=average_positive(
+                float(previous_summary.get("load_power_w", 0.0)),
+                float(current_summary.get("load_power_w", 0.0)),
+            )
+            * hours,
+            shelly_battery_charge_wh=average_positive(
+                float(previous_summary.get("battery_power_w", 0.0)),
+                float(current_summary.get("battery_power_w", 0.0)),
+            )
+            * hours,
+            shelly_battery_discharge_wh=average_positive(
+                -float(previous_summary.get("battery_power_w", 0.0)),
+                -float(current_summary.get("battery_power_w", 0.0)),
+            )
+            * hours,
+            shelly_other_energy_wh=average_positive(
+                float(previous_summary.get("other_power_w", 0.0)),
+                float(current_summary.get("other_power_w", 0.0)),
+            )
+            * hours,
+        )
+        self._previous_energy_measurement = measurement
+        self._previous_shelly_summary = current_summary
+
     @staticmethod
     def _prepare_shelly_device_payload(
         payload: dict[str, Any],
@@ -413,6 +486,10 @@ class GatewayService:
             "unique_id": payload.get("unique_id", base.unique_id if base else None),
             "created_at": None if base is None else base.created_at,
         }
+
+
+def average_positive(previous_power_w: float, current_power_w: float) -> float:
+    return max(0.0, (float(previous_power_w) + float(current_power_w)) / 2.0)
 
 
 @asynccontextmanager
