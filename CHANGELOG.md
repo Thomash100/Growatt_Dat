@@ -1,5 +1,10 @@
 # Changelog
 
+## V0.001.12 - 2026-05-05
+
+- Globale CSS-Regel fuer `[hidden]` ergaenzt, damit der `neu`-Hinweis wirklich unsichtbar bleibt, solange keine neue Version erkannt wurde.
+- Verhindert, dass `.update-indicator { display: inline-flex; }` das `hidden`-Attribut ueberstimmt.
+
 ## V0.001.11 - 2026-05-05
 
 - Web-Update-Git-Befehle nutzen `safe.directory`, damit Docker-Mounts nicht mit `check_worktree_failed: exit_128` abbrechen.

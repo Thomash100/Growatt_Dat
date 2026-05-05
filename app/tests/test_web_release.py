@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 from app.main import app
 from app.version import VERSION_LABEL
@@ -20,6 +21,13 @@ def test_dashboard_renders_version_badge_and_release_popup(monkeypatch):
     assert "Release" in response.text
     assert "stable" in response.text
     assert "Changelog" in response.text
+
+
+def test_hidden_attribute_is_not_overridden_by_component_display_css():
+    css = Path("app/web/static/style.css").read_text(encoding="utf-8")
+
+    assert "[hidden]" in css
+    assert "display: none !important" in css
 
 
 def test_update_page_renders_without_network_when_disabled(monkeypatch):
