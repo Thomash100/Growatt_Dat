@@ -44,11 +44,13 @@ Dann zeigt die Weboberflaeche kein Tokenfeld und der Installationsbutton startet
 Der Button fuehrt keine freie Shell-Eingabe aus. Der Ablauf ist fest verdrahtet:
 
 ```text
-git status --porcelain
-git fetch --tags origin
-git pull --ff-only
+git -c safe.directory=/app status --porcelain
+git -c safe.directory=/app fetch --tags origin
+git -c safe.directory=/app pull --ff-only
 docker compose up -d --build
 ```
+
+Der Zusatz `safe.directory` verhindert den Git-Fehler `check_worktree_failed: exit_128`, der bei Docker-Mounts auftreten kann, wenn `/app` im Container einem anderen Benutzer gehoert als auf dem Host.
 
 Wenn `WEB_UPDATE_RUN_DOCKER_COMPOSE=false` gesetzt ist, wird nur der Git-Teil ausgefuehrt. Das ist fuer Docker-Setups mit Quellcode-Mount interessant:
 

@@ -1,4 +1,4 @@
-VERSION = "0.001.10"
+VERSION = "0.001.11"
 VERSION_LABEL = f"V{VERSION}"
 RELEASE_CHANNEL = "stable"
 PROJECT_REPOSITORY = "Thomash100/Growatt_Dat"
@@ -14,24 +14,22 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Langzeit-Tagesstatistik fuer PV-Ertrag, Netzbezug, Einspeisung, Batterie und Shelly-Datenquellen.",
-                    "Neue Langzeitseite unter /statistics und API unter /api/statistics/daily.",
-                    "Web-Update kann im eigenen Heimnetz optional ohne Tokenfeld genutzt werden.",
+                    "Web-Update-Git-Befehle markieren das Arbeitsverzeichnis als safe.directory.",
+                    "Statische Webdateien werden mit Versionsparameter geladen, damit alte Browser-Caches den Update-Hinweis nicht festhalten.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "MQTT veroeffentlicht aktuelle Tageswerte unter growatt_local_gateway/statistics.",
-                    "Dokumentation fuer tokenfreies Web-Update und Langzeitdaten erweitert.",
+                    "Update-Indicator wird vor jeder Pruefung aktiv ausgeblendet und nur bei echter neuer Version wieder eingeblendet.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "Update-Seite blendet das Tokenfeld aus, wenn WEB_UPDATE_TOKEN_REQUIRED=false gesetzt ist.",
+                    "Web-Update scheitert im Docker-Mount nicht mehr am Git-Fehler dubious ownership / exit 128.",
                 ],
             },
         ],
@@ -45,24 +43,22 @@ RELEASE_NOTES = {
                 "title": "New Features",
                 "icon": "*",
                 "changes": [
-                    "Long-term daily statistics for PV yield, grid import, grid export, battery, and Shelly data sources.",
-                    "New long-term page at /statistics and API at /api/statistics/daily.",
-                    "Web update can optionally be used without a token field on your own home network.",
+                    "Web update Git commands mark the working directory as safe.directory.",
+                    "Static web files are loaded with a version parameter so old browser caches cannot keep the update hint stale.",
                 ],
             },
             {
                 "title": "Other Changes",
                 "icon": "-",
                 "changes": [
-                    "MQTT publishes current daily values at growatt_local_gateway/statistics.",
-                    "Documentation extended for token-free web updates and long-term data.",
+                    "The update indicator is actively hidden before every check and only shown again for a real newer version.",
                 ],
             },
             {
                 "title": "Bug Fixes",
                 "icon": "+",
                 "changes": [
-                    "The update page hides the token field when WEB_UPDATE_TOKEN_REQUIRED=false is set.",
+                    "Web update no longer fails in Docker mounts because of Git dubious ownership / exit 128.",
                 ],
             },
         ],

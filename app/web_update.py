@@ -153,13 +153,14 @@ class WebUpdater:
     async def run(self, job: WebUpdateJob) -> WebUpdateJob:
         try:
             self._validate_before_run()
+            workdir = Path(self.settings.workdir)
             if self.settings.require_clean_tree:
-                await self._run_step(job, "check_worktree", ["git", "status", "--porcelain"])
+                await self._run_step(job, "check_worktree", git_command(workdir, "status", "--porcelain"))
                 last_output = job.steps[-1].output.strip()
                 if last_output:
                     raise WebUpdateError("git_worktree_not_clean")
-            await self._run_step(job, "fetch", ["git", "fetch", "--tags", "origin"])
-            await self._run_step(job, "pull", ["git", "pull", "--ff-only"])
+            await self._run_step(job, "fetch", git_command(workdir, "fetch", "--tags", "origin"))
+            await self._run_step(job, "pull", git_command(workdir, "pull", "--ff-only"))
             if self.settings.run_docker_compose:
                 docker_command = find_docker_compose_command()
                 if docker_command is None:
@@ -223,6 +224,11 @@ def run_command(command: list[str], cwd: Path, timeout_seconds: float) -> Comman
         returncode=completed.returncode,
         output=(completed.stdout or "") + (completed.stderr or ""),
     )
+
+
+def git_command(workdir: Path, *args: str) -> list[str]:
+    safe_directory = workdir.resolve().as_posix()
+    return ["git", "-c", f"safe.directory={safe_directory}", *args]
 
 
 def find_docker_compose_command() -> list[str] | None:

@@ -14,6 +14,8 @@ def test_dashboard_renders_version_badge_and_release_popup(monkeypatch):
     assert VERSION_LABEL in response.text
     assert 'id="releaseModal"' in response.text
     assert 'id="updateIndicator" hidden aria-hidden="true"' in response.text
+    assert f"/static/app.js?v={VERSION_LABEL}" in response.text
+    assert f"/static/style.css?v={VERSION_LABEL}" in response.text
     assert "Neue Version verfuegbar" in response.text
     assert "Release" in response.text
     assert "stable" in response.text

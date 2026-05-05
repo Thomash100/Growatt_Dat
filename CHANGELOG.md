@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.001.11 - 2026-05-05
+
+- Web-Update-Git-Befehle nutzen `safe.directory`, damit Docker-Mounts nicht mit `check_worktree_failed: exit_128` abbrechen.
+- Statische CSS/JS-Dateien werden mit Versionsparameter geladen, damit alte Browser-Caches den `neu`-Hinweis nicht festhalten.
+- Navigations-Badge `neu` wird vor jeder Update-Pruefung aktiv versteckt und nur bei `update_available=true` angezeigt.
+
 ## V0.001.10 - 2026-05-05
 
 - Langzeit-Tagesstatistik fuer PV-Ertrag, Ausgangsenergie, Netzbezug, Einspeisung, Batterie und Shelly-Datenquellen ergaenzt.

@@ -174,7 +174,9 @@ function setupReleaseNotice() {
 function setupUpdateIndicator() {
   const indicator = document.getElementById("updateIndicator");
   if (!indicator || !window.fetch) return;
-  fetch("/api/update/check")
+  indicator.hidden = true;
+  indicator.setAttribute("aria-hidden", "true");
+  fetch("/api/update/check", { cache: "no-store" })
     .then((response) => {
       if (!response.ok) throw new Error("update check failed");
       return response.json();

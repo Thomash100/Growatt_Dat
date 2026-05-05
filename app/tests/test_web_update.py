@@ -1,6 +1,6 @@
 import asyncio
 
-from app.web_update import CommandResult, WebUpdateSettings, WebUpdater, new_update_job
+from app.web_update import CommandResult, WebUpdateSettings, WebUpdater, git_command, new_update_job
 
 
 def test_web_updater_reports_disabled_when_not_enabled(tmp_path):
@@ -39,9 +39,9 @@ def test_web_updater_runs_git_pull_steps(tmp_path):
 
     assert job.status == "succeeded"
     assert commands == [
-        ["git", "status", "--porcelain"],
-        ["git", "fetch", "--tags", "origin"],
-        ["git", "pull", "--ff-only"],
+        git_command(tmp_path, "status", "--porcelain"),
+        git_command(tmp_path, "fetch", "--tags", "origin"),
+        git_command(tmp_path, "pull", "--ff-only"),
     ]
 
 
@@ -49,7 +49,7 @@ def test_web_updater_rejects_dirty_worktree(tmp_path):
     (tmp_path / ".git").mkdir()
 
     def runner(command, cwd, timeout_seconds):
-        if command == ["git", "status", "--porcelain"]:
+        if command[-2:] == ["status", "--porcelain"]:
             return CommandResult(returncode=0, output=" M README.md\n")
         return CommandResult(returncode=0, output="")
 
@@ -94,3 +94,10 @@ def test_web_updater_can_disable_token_requirement(tmp_path):
     assert availability["token_required"] is False
     assert "token_not_configured" not in availability["reasons"]
     assert updater.verify_token(None) is True
+
+
+def test_git_command_marks_workdir_as_safe_directory(tmp_path):
+    command = git_command(tmp_path, "status", "--porcelain")
+
+    assert command[:3] == ["git", "-c", f"safe.directory={tmp_path.resolve().as_posix()}"]
+    assert command[-2:] == ["status", "--porcelain"]
